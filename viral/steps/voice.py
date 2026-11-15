@@ -52,14 +52,59 @@ def speak_piper(text: str, out: Path, model: Path = PIPER_MODEL) -> float:
     return _wav_duration(out)
 
 
+def speak_edge(text: str, out: Path, voice: str | None = None, rate: str = "+8%") -> float:
+    """Microsoft Edge neural TTS — free, no API key, far more natural than Piper.
+
+    Default voice is Indian English, matching the app's primary market.
+
+    NOTE: edge-tts streams audio over a WebSocket to
+    `speech.platform.bing.com`. Behind an HTTPS-inspecting proxy the TLS
+    handshake can be fixed (add the proxy CA to certifi's store) but the WSS
+    upgrade itself may still be refused, which surfaces as
+    `NoAudioReceived`. That is a network-path limitation, not a config error —
+    it works on a normal machine. Falls back to Piper so a render never dies
+    on it.
+    """
+    import asyncio
+
+    import edge_tts
+
+    voice = voice or os.environ.get("TB_EDGE_VOICE", "en-IN-PrabhatNeural")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    mp3 = out.with_suffix(".mp3")
+
+    async def _go() -> None:
+        await edge_tts.Communicate(text, voice, rate=rate).save(str(mp3))
+
+    asyncio.run(_go())
+    if not mp3.exists() or mp3.stat().st_size == 0:
+        raise RuntimeError("edge-tts returned no audio")
+    # normalise to wav so the rest of the pipeline sees one format
+    subprocess.run(["ffmpeg", "-v", "error", "-i", str(mp3), "-ar", "22050",
+                    "-ac", "1", "-y", str(out)], check=True, capture_output=True)
+    mp3.unlink(missing_ok=True)
+    return _wav_duration(out)
+
+
 def speak(text: str, out: Path) -> float:
-    """Dispatch on TB_TTS. Piper by default."""
+    """Dispatch on TB_TTS.
+
+    edge   — free Microsoft neural voices, best quality/cost ratio. Needs a
+             working WebSocket path to Microsoft.
+    piper  — fully local and offline. Always works. More synthetic.
+    """
     provider = os.environ.get("TB_TTS", "piper").lower()
+    if provider == "edge":
+        try:
+            return speak_edge(text, out)
+        except Exception as exc:  # noqa: BLE001 - any failure should degrade, not stop
+            print(f"      edge-tts unavailable ({type(exc).__name__}); using Piper")
+            return speak_piper(text, out)
     if provider == "piper":
         return speak_piper(text, out)
     raise ValueError(
-        f"TTS provider {provider!r} not wired in this build. "
-        "Piper is the local default; add an ElevenLabs branch here when a key is configured."
+        f"TTS provider {provider!r} not wired. Options: edge, piper. "
+        "Add an ElevenLabs branch here when a key is configured."
     )
 
 
