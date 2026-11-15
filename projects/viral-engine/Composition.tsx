@@ -67,7 +67,17 @@ export interface ZoomBeat {
   scale: number;
 }
 
+export interface FeatureLabel {
+  text: string;
+  index: number;
+  count: number;
+  fromFrame: number;
+  toFrame: number;
+}
+
 export interface SceneProps {
+  /** Section markers for multi-feature promos. Omit for single-clip videos. */
+  labels?: FeatureLabel[];
   video: string;
   videoDurationInFrames: number;
   hook: Hook;
@@ -146,6 +156,71 @@ const HookCard: React.FC<{ hook: Hook; fps: number }> = ({ hook, fps }) => {
             {hook.sub}
           </div>
         ) : null}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/* ---------------------------- feature label ---------------------------- */
+
+// Names the feature on screen in a multi-feature promo. Sits on an ink band at
+// the very top, which also covers the chat app's own notice text.
+const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ labels, fps }) => {
+  const frame = useCurrentFrame();
+  const label = labels.find((l) => frame >= l.fromFrame && frame < l.toFrame);
+  if (!label) return null;
+  const enter = spring({
+    frame: frame - label.fromFrame,
+    fps,
+    config: { damping: 200, mass: 0.5, stiffness: 220 },
+  });
+  return (
+    <AbsoluteFill>
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 330,
+          background: `linear-gradient(180deg, ${INK} 0%, ${INK} 72%, ${INK}00 100%)`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 62,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          opacity: enter,
+          transform: `translateY(${(1 - enter) * -16}px)`,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: SANS,
+            fontWeight: 600,
+            fontSize: 30,
+            letterSpacing: "0.14em",
+            color: ACCENT,
+          }}
+        >
+          {label.index} / {label.count}
+        </div>
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: SERIF,
+            fontWeight: 600,
+            fontSize: 96,
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
+            color: CREAM,
+          }}
+        >
+          {label.text}
+        </div>
       </div>
     </AbsoluteFill>
   );
@@ -298,18 +373,28 @@ const Cta: React.FC<{ cta: SceneProps["cta"]; fps: number }> = ({ cta, fps }) =>
 /* -------------------------------- scene -------------------------------- */
 
 export const Scene: React.FC<SceneProps> = ({
-  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps,
+  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps, labels,
 }) => {
-  const { pages } = useMemo(
-    () =>
-      createTikTokStyleCaptions({
-        captions: captions ?? [],
-        // ~1.2s per page keeps 3-5 words on screen: readable at thumb distance,
-        // still fast enough to feel native rather than like a subtitle track.
-        combineTokensWithinMilliseconds: 1200,
-      }),
-    [captions]
-  );
+  const pages = useMemo(() => {
+    // Page each script line on its own, so a page never ends with the first
+    // word of the next sentence.
+    const byLine = new Map<number, Caption[]>();
+    for (const c of captions ?? []) {
+      const line = (c as Caption & { line?: number }).line ?? 0;
+      byLine.set(line, [...(byLine.get(line) ?? []), c]);
+    }
+    return [...byLine.keys()]
+      .sort((a, b) => a - b)
+      .flatMap(
+        (line) =>
+          createTikTokStyleCaptions({
+            captions: byLine.get(line)!,
+            // ~1.2s per page keeps 3-5 words on screen: readable at thumb
+            // distance, still fast enough to feel native.
+            combineTokensWithinMilliseconds: 1200,
+          }).pages
+      );
+  }, [captions]);
 
   return (
     <AbsoluteFill style={{ background: INK }}>
@@ -319,6 +404,12 @@ export const Scene: React.FC<SceneProps> = ({
       <Sequence from={0} durationInFrames={videoDurationInFrames} name="footage">
         <Footage src={video} zooms={zooms ?? []} fps={fps} />
       </Sequence>
+
+      {labels?.length ? (
+        <Sequence from={0} durationInFrames={videoDurationInFrames} name="labels">
+          <FeatureLabelLayer labels={labels} fps={fps} />
+        </Sequence>
+      ) : null}
 
       <Sequence from={0} durationInFrames={hook.durationInFrames} name="hook">
         <HookCard hook={hook} fps={fps} />

@@ -1,0 +1,40 @@
+{
+  "slug": "promo-all-features",
+  "name": "Promo — every feature in one video",
+  "crop": "crop=1170:2080:0:452",
+  "hook": "One keyboard.\nEvery message, fixed.",
+  "hook_sub": "Works inside every app.",
+  "hook_seconds": 2.6,
+  "bpm": 120,
+  "music_style": "punchy",
+  "zoom": 1.0,
+  "cta_seconds": 4.5,
+  "cta_line": "Start free — 2,000 AI words.",
+  "store_line": "on the App Store",
+  "cta_script": "Type Better. Free to start, with two thousand AI words.",
+  "segments": [
+    {
+      "label": "Grammar",
+      "recording": "raw/1.mov",
+      "script": [
+        "One keyboard. Every message, fixed.",
+        "Grammar mistakes? One tap, and all of them are gone."
+      ]
+    },
+    {
+      "label": "Tone",
+      "recording": "raw/2 proffesional.mov",
+      "script": ["Sounds too blunt? Pick from twenty two tones, and it rewrites the message for you."]
+    },
+    {
+      "label": "Shorten",
+      "recording": "raw/3 shorten.mov",
+      "script": ["Rambling? Sixty five writing assistants can shorten it, reply for you, or rephrase it."]
+    },
+    {
+      "label": "Voice",
+      "recording": "raw/5 voice.mov",
+      "script": ["Or just talk. It cleans up what you said, and types it for you."]
+    }
+  ]
+}

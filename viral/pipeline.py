@@ -87,6 +87,37 @@ def distribute_vo(lines: list[dict], beat_times: list[float], total: float) -> l
     return offsets
 
 
+def render(props: dict, out: Path, scale: float = 1.0) -> None:
+    """Write props and render the ViralEngine composition to `out`."""
+    pub = ENGINE / "public"
+    (ENGINE / "artifacts").mkdir(parents=True, exist_ok=True)
+    (ENGINE / "artifacts" / "props.json").write_text(json.dumps(props, indent=1))
+
+    staged = ROOT / "remotion-composer" / "projects" / "viral-engine"
+    if staged.exists():
+        subprocess.run(["rm", "-rf", str(staged)], check=True)
+
+    from tools.video.video_compose import VideoCompose
+    res = VideoCompose().execute({
+        "operation": "render",
+        "output_path": str(out),
+        "edit_decisions": {
+            "render_runtime": "remotion",
+            "composition_mode": "atelier",
+            "bespoke": {
+                "entry": str(ENGINE / "index.tsx"),
+                "composition_id": "ViralEngine",
+                "props_path": str(ENGINE / "artifacts" / "props.json"),
+                "public_dir": str(pub),
+                "art_direction": str(ENGINE / "art-direction.md"),
+                "scale": scale, "crf": 18, "concurrency": 4,
+            },
+        },
+    })
+    if not res.success:
+        raise SystemExit(f"render failed: {res.error}")
+
+
 def run(recording: Path, concept_path: Path, out_dir: Path, scale: float, keep_draft: bool) -> Path:
     concept = json.loads(concept_path.read_text())
     slug = concept.get("slug", concept_path.stem)
@@ -156,33 +187,8 @@ def run(recording: Path, concept_path: Path, out_dir: Path, scale: float, keep_d
                 "icon": "app_icon_1024.png"},
         "fps": FPS,
     }
-    (ENGINE / "artifacts").mkdir(parents=True, exist_ok=True)
-    (ENGINE / "artifacts" / "props.json").write_text(json.dumps(props, indent=1))
-
     out = out_dir / f"{slug}.mp4"
-    staged = ROOT / "remotion-composer" / "projects" / "viral-engine"
-    if staged.exists():
-        subprocess.run(["rm", "-rf", str(staged)], check=True)
-
-    from tools.video.video_compose import VideoCompose
-    res = VideoCompose().execute({
-        "operation": "render",
-        "output_path": str(out),
-        "edit_decisions": {
-            "render_runtime": "remotion",
-            "composition_mode": "atelier",
-            "bespoke": {
-                "entry": str(ENGINE / "index.tsx"),
-                "composition_id": "ViralEngine",
-                "props_path": str(ENGINE / "artifacts" / "props.json"),
-                "public_dir": str(pub),
-                "art_direction": str(ENGINE / "art-direction.md"),
-                "scale": scale, "crf": 18, "concurrency": 4,
-            },
-        },
-    })
-    if not res.success:
-        raise SystemExit(f"render failed: {res.error}")
+    render(props, out, scale)
     total = (props["videoDurationInFrames"] + cta_frames) / FPS
     print(f"  [6/6] rendered: {out}  ({total:.1f}s)\n")
     return out

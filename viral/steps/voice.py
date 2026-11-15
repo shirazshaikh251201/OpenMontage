@@ -281,8 +281,10 @@ def word_timings(audio: Path, offset_s: float = 0.0, model_size: str = "base.en"
 def captions_for(vo_segments: list[dict], offsets: list[float], workdir: Path) -> list[dict]:
     """Word timings across every narration line, shifted onto the final timeline."""
     all_caps: list[dict] = []
-    for seg, off in zip(vo_segments, offsets):
-        all_caps.extend(word_timings(Path(seg["path"]), offset_s=off))
+    for n, (seg, off) in enumerate(zip(vo_segments, offsets)):
+        # tag each word with its script line so caption pages never straddle
+        # two lines (which showed the next sentence's first word early)
+        all_caps.extend({**w, "line": n} for w in word_timings(Path(seg["path"]), offset_s=off))
     all_caps.sort(key=lambda c: c["startMs"])
     (workdir / "captions.json").write_text(json.dumps(all_caps, indent=1))
     return all_caps
