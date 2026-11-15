@@ -72,8 +72,15 @@ sent it.
 |---|---|---|---|
 | 3.1 | `Can you please do the needful and share me the invoice till friday` | Shorten | Long and awkward collapses to one clean line. |
 | 3.2 | `i just wanted to quickly reach out and check in to see whether or not you might possibly have had a chance to look at the document i sent over last week` | Shorten | The best one for this set — a visibly absurd wall of text collapsing is the whole gag. |
-| 3.3 | `ok` | Expand | Inverts the pattern: two letters become a full sentence. Great as the last beat in a sequence. |
-| 3.4 | `cant make it` | Expand | Short and rude becomes short and polite. |
+| 3.3 | `cant make it tomorrow` | Expand | Curt and a bit rude becomes something you'd actually send. Inverts the pattern of every other clip, so it works as the closer. |
+| 3.4 | `no cant make it tomorrow something came up` | Expand | Use if 3.3 is refused — same idea, more words. |
+
+---
+
+> **Expand has a minimum input length.** Anything as short as `ok` returns
+> "Not enough to rewrite — add a few more words and try again", so the
+> two-letters-to-a-sentence version of this gag does not work on device.
+> Keep Expand inputs to roughly four words or more.
 
 ---
 
@@ -100,7 +107,7 @@ If you only record a few, record these, in this order:
 3. **3.2** — the rambling wall of text → most satisfying collapse
 4. **1.4** — `your going to love this, its...` → the two most common errors in English
 5. **4.1** — the voice one with the ums
-6. **3.3** — `ok` → Expand, as a closer
+6. **3.3** — `cant make it tomorrow` → Expand, as a closer
 
 That's six recordings, one per concept, and a week of content.
 
