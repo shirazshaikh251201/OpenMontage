@@ -170,10 +170,13 @@ const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number }> = ({ pages, f
       <div
         style={{
           position: "absolute",
-          // Sits in the empty chat field, above the text input and clear of
-          // the keyboard. At bottom:330 the captions covered the keys — never
-          // put the caption layer over the interface the ad is demonstrating.
-          bottom: 830,
+          // Sits in the empty chat area, above the message field. With the
+          // full-width crop (1170:2080:0:452) the tallest message field starts
+          // at y~650 and the suggestion bar at y~1050, so bottom:830 landed on
+          // the suggestion bar. Anchored by its bottom edge so a two-line page
+          // grows upward into blank space — never put the caption layer over
+          // the interface the ad is demonstrating.
+          bottom: 1340,
           left: 56,
           right: 56,
           textAlign: "center",
