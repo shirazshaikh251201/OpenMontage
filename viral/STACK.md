@@ -108,12 +108,35 @@ dependency constraint entirely — better, because it doesn't hold PyAV back.
 ## TTS: current state
 
 ```bash
-TB_TTS=piper  python viral/pipeline.py ...   # default, always works
-TB_TTS=edge   python viral/pipeline.py ...   # better voice, needs WebSockets
+TB_TTS=elevenlabs python viral/pipeline.py ...   # best; costs credits, cached
+TB_TTS=piper      python viral/pipeline.py ...   # default, always works
+TB_TTS=edge       python viral/pipeline.py ...   # free, needs WebSockets
 ```
 
-`edge-tts` streams audio over a **WebSocket** to `speech.platform.bing.com`.
-In this sandbox:
+**ElevenLabs is live.** `api.elevenlabs.io` is reachable over plain HTTPS (the
+REST path works where edge-tts's WebSocket does not), and the key is stored as
+a network secret on the environment rather than in the repo or a variable — the
+proxy injects the `xi-api-key` header, so no code here ever holds the value.
+Because of that, `ELEVENLABS_API_KEY` must still be set to a placeholder
+(`proxy-injected`) to satisfy the provider's own guard; on a normal machine set
+it to the real key instead.
+
+Every result is cached under `~/.cache/typebetter-tts/` keyed by a hash of
+(text, voice, model). A cache hit returns in ~0.09s and spends nothing, so
+iterating on captions, music or pacing never re-charges narration. Only new
+script text is ever billed.
+
+Unlike the edge provider, this one does **not** fall back to Piper. If you ask
+for the paid voice, silently substituting the synthetic one risks publishing a
+video that sounds wrong, so it fails loudly instead.
+
+Default voice is `Liam` (energetic, social-media). Names resolve loosely, so
+`Liam` matches "Liam - Energetic, Social Media Creator".
+`python viral/steps/voice.py voices` lists what the account actually has —
+worth checking, because the common tutorial default `Rachel` is not on it.
+
+`edge-tts` remains the free fallback. It streams audio over a **WebSocket** to
+`speech.platform.bing.com`. In this sandbox:
 
 - The TLS failure was fixable — the proxy's CA wasn't in certifi's store, so I
   added it (the documented fix; verification stays on).

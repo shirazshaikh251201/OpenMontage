@@ -86,14 +86,114 @@ def speak_edge(text: str, out: Path, voice: str | None = None, rate: str = "+8%"
     return _wav_duration(out)
 
 
+ELEVEN_CACHE = Path.home() / ".cache" / "typebetter-tts"
+
+
+def _eleven_voice_id(api_key: str, wanted: str) -> str:
+    """Accept either a raw voice_id or a human voice name, and resolve it.
+
+    Resolving by name means a concept file can say "Rachel" and keep working
+    across accounts, instead of hardcoding an opaque id that may not exist.
+    """
+    import json as _json
+    import urllib.request
+
+    req = urllib.request.Request(
+        "https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": api_key})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        voices = _json.load(r)["voices"]
+    w = wanted.lower().strip()
+    for v in voices:
+        if v["voice_id"] == wanted:
+            return wanted
+    # ElevenLabs names carry descriptor suffixes ("Liam - Energetic, Social
+    # Media Creator"), so match the leading name too rather than demanding
+    # the whole string.
+    for v in voices:
+        name = v["name"].lower()
+        if name == w or name.split(" - ")[0].strip() == w:
+            return v["voice_id"]
+    for v in voices:
+        if w in v["name"].lower():
+            return v["voice_id"]
+    names = "\n    ".join(sorted(v["name"] for v in voices))
+    raise ValueError(
+        f"ElevenLabs voice {wanted!r} is not on this account. Available:\n    {names}")
+
+
+def speak_elevenlabs(text: str, out: Path, voice: str | None = None) -> float:
+    """ElevenLabs TTS — the quality ceiling, and the only provider that costs money.
+
+    Billed per character, so every result is cached by a hash of
+    (text, voice, model). Re-rendering the same concept — which happens
+    constantly while iterating on captions, music or pacing — then costs
+    nothing. Only genuinely new narration is ever charged.
+
+    Deliberately does NOT fall back to Piper. If you asked for the paid voice,
+    silently substituting the synthetic one risks publishing a video that
+    sounds wrong; failing loudly is the safer error.
+    """
+    import hashlib
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key:
+        raise RuntimeError(
+            "ELEVENLABS_API_KEY is not set.\n"
+            "  Set it in the environment, then re-run with TB_TTS=elevenlabs.")
+    voice = voice or os.environ.get("TB_ELEVEN_VOICE", "Liam")
+    # multilingual_v2 is the quality ceiling; turbo_v2_5 is ~half the credits
+    # and good enough for volume. Switch with TB_ELEVEN_MODEL.
+    model = os.environ.get("TB_ELEVEN_MODEL", "eleven_multilingual_v2")
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    ELEVEN_CACHE.mkdir(parents=True, exist_ok=True)
+    stamp = hashlib.sha256(f"{text}|{voice}|{model}".encode()).hexdigest()[:16]
+    cached = ELEVEN_CACHE / f"{stamp}.wav"
+
+    if not cached.exists():
+        vid = _eleven_voice_id(key, voice)
+        body = _json.dumps({
+            "text": text,
+            "model_id": model,
+            "voice_settings": {"stability": 0.45, "similarity_boost": 0.8,
+                               "style": 0.0, "use_speaker_boost": True},
+        }).encode()
+        req = urllib.request.Request(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{vid}"
+            "?output_format=mp3_44100_128",
+            data=body,
+            headers={"xi-api-key": key, "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                audio = r.read()
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode(errors="replace")[:300]
+            raise RuntimeError(f"ElevenLabs HTTP {exc.code}: {detail}") from exc
+        mp3 = cached.with_suffix(".mp3")
+        mp3.write_bytes(audio)
+        # normalise to the one format the rest of the pipeline expects
+        subprocess.run(["ffmpeg", "-v", "error", "-i", str(mp3), "-ar", "22050",
+                        "-ac", "1", "-y", str(cached)], check=True, capture_output=True)
+        mp3.unlink(missing_ok=True)
+
+    shutil.copyfile(cached, out)
+    return _wav_duration(out)
+
+
 def speak(text: str, out: Path) -> float:
     """Dispatch on TB_TTS.
 
-    edge   — free Microsoft neural voices, best quality/cost ratio. Needs a
-             working WebSocket path to Microsoft.
-    piper  — fully local and offline. Always works. More synthetic.
+    elevenlabs — best quality. Costs credits; cached so reruns are free.
+    edge       — free Microsoft neural voices. Needs a WebSocket path out.
+    piper      — fully local and offline. Always works. More synthetic.
     """
     provider = os.environ.get("TB_TTS", "piper").lower()
+    if provider in ("eleven", "elevenlabs"):
+        return speak_elevenlabs(text, out)
     if provider == "edge":
         try:
             return speak_edge(text, out)
@@ -103,9 +203,7 @@ def speak(text: str, out: Path) -> float:
     if provider == "piper":
         return speak_piper(text, out)
     raise ValueError(
-        f"TTS provider {provider!r} not wired. Options: edge, piper. "
-        "Add an ElevenLabs branch here when a key is configured."
-    )
+        f"TTS provider {provider!r} not wired. Options: elevenlabs, edge, piper.")
 
 
 def narrate(lines: list[str], workdir: Path) -> list[dict]:
@@ -192,6 +290,23 @@ def captions_for(vo_segments: list[dict], offsets: list[float], workdir: Path) -
 
 if __name__ == "__main__":
     import sys
+
+    # `python viral/steps/voice.py voices` -> what's on the ElevenLabs account
+    if len(sys.argv) > 1 and sys.argv[1] == "voices":
+        import json as _json
+        import urllib.request
+        _key = os.environ.get("ELEVENLABS_API_KEY")
+        if not _key:
+            raise SystemExit("ELEVENLABS_API_KEY is not set.")
+        _req = urllib.request.Request(
+            "https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": _key})
+        with urllib.request.urlopen(_req, timeout=30) as _r:
+            for _v in _json.load(_r)["voices"]:
+                _lab = _v.get("labels") or {}
+                _desc = ", ".join(f"{k}={x}" for k, x in _lab.items()) or "-"
+                print(f"{_v['name']:<22} {_v['voice_id']}  {_desc}")
+        raise SystemExit(0)
+
     wd = Path(sys.argv[1] if len(sys.argv) > 1 else "/tmp/vo_test")
     segs = narrate(["This is Type Better. Type it wrong, and one tap fixes it."], wd)
     print(json.dumps(segs, indent=2))

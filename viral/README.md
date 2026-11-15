@@ -239,7 +239,7 @@ The better the input, the less the system has to compensate:
 
 | Gap | Status |
 |---|---|
-| ElevenLabs voice | Scripted and wired behind `TB_TTS=elevenlabs`; blocked in this environment (connector 502s, no API key set). Piper is the working default. |
+| ElevenLabs voice | **Working.** `TB_TTS=elevenlabs`, key held as a network secret on the environment. Results cached by text+voice+model hash, so re-renders cost nothing. Default voice `Liam`; `python viral/steps/voice.py voices` lists the account. |
 | Real music | Synth bed is on by default. Drop any `.mp3` into `music_library/` and `sound.bed()` uses it instead. |
 | App icon | Reconstructed from the App Store listing. Replace `projects/viral-engine/public/app_icon_1024.png` with the original. |
 | Auto-publishing | Not wired. Postiz/Metricool connectors exist for multi-account scheduling if you want it. |

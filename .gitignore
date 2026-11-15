@@ -114,3 +114,6 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# session artifact, delivered to the user directly
+unpushed-commits.patch
