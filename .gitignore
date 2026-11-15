@@ -116,4 +116,4 @@ venv/
 .venv-wan/
 
 # session artifact, delivered to the user directly
-unpushed-commits.patch
+typebetter-viral-system.patch
