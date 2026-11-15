@@ -1,6 +1,7 @@
 {
   "slug": "mistake-reveal",
   "name": "Mistake Reveal — watch it fix itself",
+  "crop": "crop=1170:2080:0:452",
   "hook": "I type like this.\nOn purpose.",
   "hook_sub": "Watch what happens next.",
   "hook_seconds": 2.2,

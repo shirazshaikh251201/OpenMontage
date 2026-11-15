@@ -1,6 +1,7 @@
 {
   "slug": "speed-run",
   "name": "Speed Run — how fast can you fix a broken sentence?",
+  "crop": "crop=1170:2080:0:452",
   "hook": "How fast can you fix\na broken sentence?",
   "hook_sub": "Timer starts now.",
   "hook_seconds": 2.0,

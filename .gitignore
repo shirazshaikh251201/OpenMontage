@@ -117,3 +117,6 @@ venv/
 
 # session artifact, delivered to the user directly
 typebetter-viral-system.patch
+
+# Raw screen recordings (large, delivered via Drive)
+raw/

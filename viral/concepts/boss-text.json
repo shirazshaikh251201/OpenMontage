@@ -1,6 +1,7 @@
 {
   "slug": "boss-text",
   "name": "The Boss Text — do not send this",
+  "crop": "crop=1170:2080:0:452",
   "hook": "You do NOT send\nthis to your boss.",
   "hook_sub": "Let it rewrite you first.",
   "hook_seconds": 2.3,

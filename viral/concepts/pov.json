@@ -1,6 +1,7 @@
 {
   "slug": "pov",
   "name": "POV — you type like you talk",
+  "crop": "crop=1170:2080:0:452",
   "hook": "POV: you type\nlike you talk.",
   "hook_seconds": 1.9,
   "script": [

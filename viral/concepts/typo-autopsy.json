@@ -1,6 +1,7 @@
 {
   "slug": "typo-autopsy",
   "name": "Typo Autopsy — can you find all three?",
+  "crop": "crop=1170:2080:0:452",
   "hook": "Three mistakes\nin one sentence.",
   "hook_sub": "Can you find them all?",
   "hook_seconds": 2.6,

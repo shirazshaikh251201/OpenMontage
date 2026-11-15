@@ -171,9 +171,31 @@ def plan_segments(
     return merged
 
 
-def analyse(video: Path) -> dict:
+def fit_to_duration(segs: list[Segment], target_s: float) -> list[Segment]:
+    """Relax the speed plan so the output runs at least `target_s`.
+
+    The default policy assumes a long, mostly-dead recording. A tight clip
+    (one fix, ~15s) compresses to 6-8s, which is shorter than the narration,
+    and the lines would then pile on top of each other. Rather than cut the
+    script, slow the compressed segments back toward 1x until the footage is
+    long enough to carry it. Decision moments are already 1x and never change.
+    """
+    def out(k: float) -> float:
+        return sum((s.end - s.start) / max(1.0, s.speed * k) for s in segs)
+
+    if out(1.0) >= target_s:
+        return segs
+    lo, hi = 0.0, 1.0            # out(lo) is the all-1x ceiling
+    if out(lo) > target_s:
+        for _ in range(40):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if out(mid) >= target_s else (lo, mid)
+    return [Segment(s.start, s.end, round(max(1.0, s.speed * lo), 4), s.reason) for s in segs]
+
+
+def analyse(video: Path, segs: list[Segment] | None = None) -> dict:
     """Everything the rest of the pipeline needs to know about a recording."""
-    segs = plan_segments(video)
+    segs = segs or plan_segments(video)
     beats = find_beats(video)
     src_dur = sum(s.end - s.start for s in segs)
     out_dur = sum(s.out_duration for s in segs)

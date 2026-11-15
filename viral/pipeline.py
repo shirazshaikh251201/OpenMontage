@@ -43,11 +43,17 @@ def sh(cmd: list[str]) -> None:
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def normalise(src: Path, out: Path, segs: list[beats_mod.Segment], crop: str | None) -> float:
+def normalise(src: Path, out: Path, segs: list[beats_mod.Segment], crop: str | None,
+              min_duration: float = 0.0) -> float:
     """Apply the speed plan and conform to 1080x1920 in a single ffmpeg pass."""
     vf_tail = crop or "crop='min(iw,ih*9/16)':'min(ih,iw*16/9)'"
     graph = beats_mod.build_filter(segs)
-    graph += f";[outv]{vf_tail},scale={W}:{H},fps={FPS}[final]"
+    # If the recording is shorter than the narration even at 1x, hold the last
+    # frame (the corrected message) rather than talk over a cut to black.
+    src_out = sum(s.out_duration for s in segs)
+    pad = max(0.0, min_duration - src_out)
+    hold = f",tpad=stop_mode=clone:stop_duration={pad:.3f}" if pad > 0.05 else ""
+    graph += f";[outv]{vf_tail},scale={W}:{H},fps={FPS}{hold}[final]"
     out.parent.mkdir(parents=True, exist_ok=True)
     sh(["ffmpeg", "-v", "error", "-i", str(src), "-filter_complex", graph,
         "-map", "[final]", "-an", "-c:v", "libx264", "-preset", "medium",
@@ -68,10 +74,14 @@ def distribute_vo(lines: list[dict], beat_times: list[float], total: float) -> l
     offsets = [0.25]
     usable = [t for t in beat_times if t > 1.0]
     cursor = 0.25 + lines[0]["duration"] + 0.18
-    for ln in lines[1:]:
+    for i, ln in enumerate(lines[1:], start=1):
         target = next((t - ln["duration"] * 0.72 for t in usable if t - ln["duration"] * 0.72 >= cursor), None)
         start = target if target is not None else cursor
-        start = min(start, max(0.0, total - ln["duration"] - 0.1))
+        # never chase a beat so far that the remaining lines no longer fit:
+        # lines must not overlap, and that outranks landing on the beat
+        rest = lines[i:]
+        latest = total - 0.1 - sum(r["duration"] for r in rest) - 0.18 * (len(rest) - 1)
+        start = max(cursor, min(start, latest))
         offsets.append(round(start, 3))
         cursor = start + ln["duration"] + 0.18
     return offsets
@@ -89,22 +99,26 @@ def run(recording: Path, concept_path: Path, out_dir: Path, scale: float, keep_d
     print(f"  recording {recording.name}")
 
     # 1 ── read the recording -------------------------------------------------
-    analysis = beats_mod.analyse(recording)
-    segs = beats_mod.plan_segments(recording)
+    # Narration is generated first: its length decides how hard the footage
+    # may be compressed (see beats.fit_to_duration).
+    lines = concept["script"]
+    vo_segs = voice_mod.narrate(lines, work / "vo")
+    vo_needed = 0.25 + sum(v["duration"] for v in vo_segs) + 0.18 * (len(vo_segs) - 1) + 0.5
+
+    segs = beats_mod.fit_to_duration(beats_mod.plan_segments(recording), vo_needed)
+    analysis = beats_mod.analyse(recording, segs)
     print(f"\n  [1/6] analysed: {analysis['source_duration']}s -> "
           f"{analysis['output_duration']}s ({analysis['compression']}x), "
           f"{len(analysis['beats'])} beats")
 
     # 2 ── conform ------------------------------------------------------------
     footage = pub / f"{slug}_footage.mp4"
-    body = normalise(recording, footage, segs, concept.get("crop"))
+    body = normalise(recording, footage, segs, concept.get("crop"), vo_needed)
     print(f"  [2/6] footage conformed: {body:.2f}s @ {W}x{H}/{FPS}fps")
 
     beat_times = [b["t_out"] for b in analysis["beats"] if b["t_out"] < body - 0.3]
 
     # 3 ── narration ----------------------------------------------------------
-    lines = concept["script"]
-    vo_segs = voice_mod.narrate(lines, work / "vo")
     offsets = distribute_vo(vo_segs, beat_times, body)
     vo = voice_mod.assemble_vo(vo_segs, offsets, body, work / "narration.wav")
     print(f"  [3/6] narration: {len(lines)} lines placed at "

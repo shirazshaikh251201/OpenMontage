@@ -1,6 +1,7 @@
 {
   "slug": "before-after",
   "name": "Before / After — same message, two senders",
+  "crop": "crop=1170:2080:0:452",
   "hook": "Same message.\nTwo senders.",
   "hook_sub": "Guess which one got a reply.",
   "hook_seconds": 2.4,
