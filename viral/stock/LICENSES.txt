@@ -1,0 +1,72 @@
+TypeBetter reaction clips - sources
+Compiled 17 Nov 2026. All clips from Pexels, downloaded at Full HD 1080x1920 (9:16 vertical).
+Licence: Pexels Licence (https://www.pexels.com/license/) - free for commercial use incl. paid
+ads, no attribution required. Each clip page lists "License: Free" and declares the Pexels
+Licence URL in its page data; both were checked per clip.
+
+Vetting applied to every clip: animal or object is the subject, no recognisable human faces,
+no brand logos or third-party app UI on screen, 3-15 seconds, vertical 9:16.
+
+-------------------------------------------------------------------------------
+1. cat surprised
+   File:     13403742_1080_1920_25fps.mp4
+   Rename:   01-cat-surprised-closeup.mp4
+   Page:     https://www.pexels.com/video/black-and-white-closeup-of-calico-cat-31421115/
+   Creator:  Bade Saba
+   Details:  8s | 1080x1920 | B&W extreme close-up of cat's eye and face
+
+2. cat looking at camera
+   File:     6001288-hd_1080_1920_24fps.mp4
+   Rename:   02-cat-looking-at-camera.mp4
+   Page:     https://www.pexels.com/video/close-up-view-of-a-cat-looking-around-6001288/
+   Creator:  Sam Lion
+   Details:  12s | 1080x1920 | cat peering over a bed, direct eyeline
+
+3. dog tilting head
+   File:     17940991-hd_1080_1920_30fps.mp4
+   Rename:   03-dog-head-tilt.mp4
+   Page:     https://www.pexels.com/video/a-dog-with-a-white-and-brown-face-is-looking-at-the-camera-17940991/
+   Creator:  Viktoria B.
+   Details:  13s | 1080x1920 | close-up, head tilt with squint
+
+4. confused dog
+   File:     17029747-hd_1080_1920_24fps.mp4
+   Rename:   04-dog-confused-looking-up.mp4
+   Page:     https://www.pexels.com/video/a-dog-looking-up-at-the-ceiling-17029747/
+   Creator:  Ali Alcantara
+   Details:  8s | 1080x1920 | labrador looking up, plain wall background
+
+5. clock ticking
+   File:     11267667-hd_1080_1920_30fps.mp4
+   Rename:   05-clock-ticking.mp4
+   Page:     https://www.pexels.com/video/close-up-on-clock-hands-moving-11267667/
+   Creator:  Anton Kudryashov
+   Details:  4s | 1080x1920 | alarm clock face, hands moving
+
+6. coffee spill
+   File:     12452240_1080_1920_30fps.mp4
+   Rename:   06-coffee-beans-spill.mp4
+   Page:     https://www.pexels.com/video/coffee-beans-spilled-from-cup-in-artistic-cafe-28682906/
+   Creator:  23 Audiovisual
+   Details:  4s | 1080x1920 | cup tipped, beans spilling across table (hand in shot, no face)
+
+7. hands typing on phone
+   File:     6689314-hd_1080_1920_25fps.mp4
+   Rename:   07-hands-typing-phone.mp4
+   Page:     https://www.pexels.com/video/a-person-texting-a-broken-heart-emoji-6689314/
+   Creator:  Ivan S
+   Details:  10s | 1080x1920 | thumbs typing, emoji keyboard open, hands only
+
+8. hands typing on phone (second option)
+   File:     15689201-hd_1080_1920_24fps.mp4
+   Rename:   08-hands-holding-phone.mp4
+   Page:     https://www.pexels.com/video/close-up-view-of-a-person-using-a-smartphone-15689201/
+   Creator:  Ali Alcantara
+   Details:  8s | 1080x1920 | close-up hands on phone, blank screen, no logos
+
+-------------------------------------------------------------------------------
+REJECTED during vetting (kept here so they are not re-picked):
+ - Hand Holding Phone with Icons on Screen (Mger Akopian)  - vivo logo visible on handset
+ - Close up on Man Hand Scrolling Phone Gallery (RDNE)     - third-party app UI on screen
+ - A Sugar Cube Falling into a Cup of Coffee (Alex Moisieiev) - neon sign text burned into shot
+ - Curious Cat Peering Through a Fence (Ebahir)            - creator bio restricts reuse
