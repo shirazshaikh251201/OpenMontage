@@ -28,20 +28,20 @@ import { Caption, createTikTokStyleCaptions, TikTokPage } from "@remotion/captio
 // Sampled from the iOS app itself. The product has NO blue anywhere — the
 // only colour it uses is the correction green on an applied fix, and a muted
 // red on a struck-through error. Everything else is black / white / warm off-white.
-const CREAM = "#F6F0EC";   // the app's own warm off-white
-const INK = "#0B0B10";     // app icon, headlines
-const ACCENT = "#21C165";  // the ✓Applied tick — "this got fixed"
+export const CREAM = "#F6F0EC";   // the app's own warm off-white
+export const INK = "#0B0B10";     // app icon, headlines
+export const ACCENT = "#21C165";  // the ✓Applied tick — "this got fixed"
 const ERROR = "#A04641";   // strikethrough on an error
 
-const SERIF = "'TB Playfair', Georgia, serif";
-const SANS = "'TB Inter', system-ui, sans-serif";
+export const SERIF = "'TB Playfair', Georgia, serif";
+export const SANS = "'TB Inter', system-ui, sans-serif";
 
 const fontFace = (family: string, file: string, weight: number) =>
   `@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:block;src:url(${staticFile(
     `fonts/${file}.woff2`
   )}) format('woff2');}`;
 
-const FontFaces: React.FC = () => (
+export const FontFaces: React.FC = () => (
   <style
     dangerouslySetInnerHTML={{
       __html: [
@@ -399,7 +399,7 @@ const PresenterBubble: React.FC<{ src: string; startFrom: number; fps: number }>
 
 /* --------------------------------- CTA --------------------------------- */
 
-const Cta: React.FC<{ cta: SceneProps["cta"]; fps: number }> = ({ cta, fps }) => {
+export const Cta: React.FC<{ cta: SceneProps["cta"]; fps: number }> = ({ cta, fps }) => {
   const frame = useCurrentFrame();
   const s = spring({ frame, fps, config: { damping: 13, mass: 0.7, stiffness: 160 } });
   const fade = (a: number, b: number) =>

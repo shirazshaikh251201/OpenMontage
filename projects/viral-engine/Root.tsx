@@ -1,5 +1,6 @@
 import { Composition } from "remotion";
 import { Scene, calculateMetadata, SceneProps } from "./Composition";
+import { SplitMeme, calculateSplitMetadata, SplitProps } from "./SplitMeme";
 
 const fallback = {
   video: "", videoDurationInFrames: 300, captions: [], zooms: [], audio: null, fps: 30,
@@ -8,6 +9,7 @@ const fallback = {
 } as unknown as SceneProps;
 
 export const Root: React.FC = () => (
+  <>
   <Composition
     id="ViralEngine"
     component={Scene}
@@ -18,4 +20,15 @@ export const Root: React.FC = () => (
     defaultProps={fallback}
     calculateMetadata={calculateMetadata}
   />
+  <Composition
+    id="SplitMeme"
+    component={SplitMeme}
+    durationInFrames={600}
+    fps={30}
+    width={1080}
+    height={1920}
+    defaultProps={{} as unknown as SplitProps}
+    calculateMetadata={calculateSplitMetadata}
+  />
+  </>
 );

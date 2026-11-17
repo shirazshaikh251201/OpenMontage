@@ -96,10 +96,10 @@ def detect_theme(footage: Path) -> str:
     return "light" if px and px[0] > 128 else "dark"
 
 
-def render(props: dict, out: Path, scale: float = 1.0) -> None:
+def render(props: dict, out: Path, scale: float = 1.0, composition_id: str = "ViralEngine") -> None:
     """Write props and render the ViralEngine composition to `out`."""
     pub = ENGINE / "public"
-    if "theme" not in props:
+    if "theme" not in props and "video" in props:
         props["theme"] = detect_theme(pub / props["video"])
     (ENGINE / "artifacts").mkdir(parents=True, exist_ok=True)
     (ENGINE / "artifacts" / "props.json").write_text(json.dumps(props, indent=1))
@@ -117,7 +117,7 @@ def render(props: dict, out: Path, scale: float = 1.0) -> None:
             "composition_mode": "atelier",
             "bespoke": {
                 "entry": str(ENGINE / "index.tsx"),
-                "composition_id": "ViralEngine",
+                "composition_id": composition_id,
                 "props_path": str(ENGINE / "artifacts" / "props.json"),
                 "public_dir": str(pub),
                 "art_direction": str(ENGINE / "art-direction.md"),
