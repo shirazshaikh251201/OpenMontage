@@ -105,9 +105,15 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     body_frames = int(math.floor(cursor * fps))
 
     reaction_src = pl.ROOT / spec["reaction"]
+    framing = pl.ROOT / "viral" / "stock" / "reaction_framing.json"
+    if "reaction_y" not in spec and framing.exists():
+        spec["reaction_y"] = json.loads(framing.read_text()).get(reaction_src.stem, 0.38)
     reaction = pub / f"{slug}_reaction.mp4"
     pl.sh(["ffmpeg", "-v", "error", "-i", str(reaction_src), "-an",
-           "-vf", f"scale=1080:-2,crop=1080:{REACTION_H}:0:(ih-{REACTION_H})/2.6,fps={fps}",
+           # reaction_y: where the subject's face sits, as a fraction of the
+           # clip's height, so the wide strip keeps it in frame
+           "-vf", f"scale=1080:-2,crop=1080:{REACTION_H}:0:"
+                  f"'max(0,min(ih-{REACTION_H},ih*{spec.get('reaction_y', 0.38)}-{REACTION_H}/2))',fps={fps}",
            "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-y", str(reaction)])
     reaction_frames = int(math.floor(float(subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(reaction)],
