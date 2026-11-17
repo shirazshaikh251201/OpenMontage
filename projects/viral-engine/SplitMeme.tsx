@@ -34,6 +34,11 @@ export interface SplitProps {
   phoneHeight: number;
   reaction: string;
   reactionFrames: number;
+  /** frame the fix lands: the reaction crash-zooms here (the edited "surprise") */
+  revealFrame?: number;
+  /** where the face is in the strip, 0-1, so the zoom lands on it */
+  reactionFocusX?: number;
+  reactionFocusY?: number;
   bodyFrames: number;
   headlines: Headline[];
   audio?: string | null;
@@ -92,11 +97,22 @@ const HeadlineLayer: React.FC<{ headlines: Headline[]; fps: number }> = ({ headl
 
 export const SplitMeme: React.FC<SplitProps> = ({
   phone, phoneWidth, phoneHeight, reaction, reactionFrames, bodyFrames, headlines, audio, cta, fps,
+  revealFrame, reactionFocusX, reactionFocusY,
 }) => {
   const frame = useCurrentFrame();
   const left = (1080 - phoneWidth) / 2;
   const reactionTop = TOP + phoneHeight + 28;
   const pop = interpolate(frame, [0, 8], [0.96, 1], { extrapolateRight: "clamp" });
+
+  // Crash zoom on the fix: snap in over 3 frames, shake, hold, ease back.
+  const r = revealFrame ?? -999;
+  const d = frame - r;
+  const zoom =
+    d < 0 ? 1 : d < 3 ? interpolate(d, [0, 3], [1, 1.75]) : d < 45 ? 1.75 : interpolate(d, [45, 60], [1.75, 1], { extrapolateRight: "clamp" });
+  const shake = d >= 0 && d < 14 ? (14 - d) / 14 : 0;
+  const sx = shake * 18 * Math.sin(d * 2.7);
+  const sy = shake * 12 * Math.cos(d * 3.3);
+  const flash = d >= 0 && d < 4 ? interpolate(d, [0, 4], [0.75, 0]) : 0;
   return (
     <AbsoluteFill style={{ background: CREAM }}>
       <FontFaces />
@@ -119,9 +135,16 @@ export const SplitMeme: React.FC<SplitProps> = ({
               <OffthreadVideo
                 src={staticFile(reaction)}
                 muted
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transformOrigin: `${(reactionFocusX ?? 0.5) * 100}% ${(reactionFocusY ?? 0.5) * 100}%`,
+                  transform: `translate(${sx}px, ${sy}px) scale(${zoom})`,
+                }}
               />
             </Loop>
+            <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
           </div>
 
           <div

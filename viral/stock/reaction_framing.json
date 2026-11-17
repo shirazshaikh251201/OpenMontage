@@ -1,10 +1,42 @@
 {
-  "01-cat-surprised-closeup": 0.4,
-  "02-cat-looking-at-camera": 0.43,
-  "03-dog-head-tilt": 0.5,
-  "04-dog-confused-looking-up": 0.39,
-  "05-clock-ticking": 0.41,
-  "06-coffee-beans-spill": 0.6,
-  "07-hands-typing-phone": 0.63,
-  "08-hands-holding-phone": 0.53
+  "01-cat-surprised-closeup": {
+    "y": 0.4,
+    "focus_x": 0.42,
+    "focus_y": 0.4
+  },
+  "02-cat-looking-at-camera": {
+    "y": 0.43,
+    "focus_x": 0.7,
+    "focus_y": 0.45
+  },
+  "03-dog-head-tilt": {
+    "y": 0.5,
+    "focus_x": 0.45,
+    "focus_y": 0.65
+  },
+  "04-dog-confused-looking-up": {
+    "y": 0.39,
+    "focus_x": 0.42,
+    "focus_y": 0.55
+  },
+  "05-clock-ticking": {
+    "y": 0.41,
+    "focus_x": 0.5,
+    "focus_y": 0.5
+  },
+  "06-coffee-beans-spill": {
+    "y": 0.6,
+    "focus_x": 0.5,
+    "focus_y": 0.5
+  },
+  "07-hands-typing-phone": {
+    "y": 0.63,
+    "focus_x": 0.5,
+    "focus_y": 0.5
+  },
+  "08-hands-holding-phone": {
+    "y": 0.53,
+    "focus_x": 0.5,
+    "focus_y": 0.5
+  }
 }

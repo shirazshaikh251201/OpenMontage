@@ -107,7 +107,11 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     reaction_src = pl.ROOT / spec["reaction"]
     framing = pl.ROOT / "viral" / "stock" / "reaction_framing.json"
     if "reaction_y" not in spec and framing.exists():
-        spec["reaction_y"] = json.loads(framing.read_text()).get(reaction_src.stem, 0.38)
+        f = json.loads(framing.read_text()).get(reaction_src.stem, 0.38)
+        f = f if isinstance(f, dict) else {"y": f}
+        spec["reaction_y"] = f.get("y", 0.38)
+        spec.setdefault("reaction_focus_x", f.get("focus_x", 0.5))
+        spec.setdefault("reaction_focus_y", f.get("focus_y", 0.5))
     reaction = pub / f"{slug}_reaction.mp4"
     pl.sh(["ffmpeg", "-v", "error", "-i", str(reaction_src), "-an",
            # reaction_y: where the subject's face sits, as a fraction of the
@@ -139,6 +143,10 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     props = {
         "phone": phone.name, "phoneWidth": PHONE_W, "phoneHeight": PHONE_H,
         "reaction": reaction.name, "reactionFrames": reaction_frames,
+        # the surprise lands on the last section's fix
+        "revealFrame": round(reveal * fps),
+        "reactionFocusX": spec.get("reaction_focus_x", 0.5),
+        "reactionFocusY": spec.get("reaction_focus_y", 0.5),
         "bodyFrames": body_frames, "headlines": headlines, "audio": track.name,
         "cta": {"durationInFrames": int(cta_s * fps), "wordmark": "Type Better",
                 "line": spec.get("cta_line", "Start free — 2,000 AI words."),
