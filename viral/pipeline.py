@@ -87,9 +87,20 @@ def distribute_vo(lines: list[dict], beat_times: list[float], total: float) -> l
     return offsets
 
 
+def detect_theme(footage: Path) -> str:
+    """'light' if the recording was shot in light mode, else 'dark' (mean luma at 1s)."""
+    px = subprocess.run(
+        ["ffmpeg", "-v", "error", "-ss", "1", "-i", str(footage), "-frames:v", "1",
+         "-vf", "scale=1:1,format=gray", "-f", "rawvideo", "-"],
+        capture_output=True, check=True).stdout
+    return "light" if px and px[0] > 128 else "dark"
+
+
 def render(props: dict, out: Path, scale: float = 1.0) -> None:
     """Write props and render the ViralEngine composition to `out`."""
     pub = ENGINE / "public"
+    if "theme" not in props:
+        props["theme"] = detect_theme(pub / props["video"])
     (ENGINE / "artifacts").mkdir(parents=True, exist_ok=True)
     (ENGINE / "artifacts" / "props.json").write_text(json.dumps(props, indent=1))
 

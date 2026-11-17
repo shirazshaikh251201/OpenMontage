@@ -46,6 +46,12 @@ def run(promo_path: Path, out_dir: Path, scale: float) -> Path:
     cursor = 0.0
     for i, seg in enumerate(promo["segments"]):
         rec = pl.ROOT / seg["recording"]
+        if seg.get("start"):
+            # skip a bad opening (e.g. the iOS "Allow Paste" prompt in Reply)
+            cut = work / f"src_{i}.mp4"
+            pl.sh(["ffmpeg", "-v", "error", "-ss", str(seg["start"]), "-i", str(rec),
+                   "-an", "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-y", str(cut)])
+            rec = cut
         vo = voice_mod.narrate(seg["script"], work / f"vo_{i}")
         needed = LEAD + sum(v["duration"] for v in vo) + GAP * (len(vo) - 1) + TAIL
         plan = beats_mod.fit_to_duration(beats_mod.plan_segments(rec), needed)

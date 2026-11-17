@@ -15,7 +15,7 @@
   "segments": [
     {
       "label": "Grammar",
-      "recording": "raw/v2/1 grammar-three.mov",
+      "recording": "raw/v3/1 grammar-three.mov",
       "script": [
         "One keyboard. Every message, fixed.",
         "Grammar mistakes? One tap, and all of them are gone."
@@ -23,35 +23,36 @@
     },
     {
       "label": "Tone",
-      "recording": "raw/v2/2 professional.mov",
+      "recording": "raw/v3/2 professional.mov",
       "script": [
         "Too blunt? Pick from twenty two tones, and it rewrites the message for you."
       ]
     },
     {
       "label": "Shorten",
-      "recording": "raw/v2/3 shorten.mov",
+      "recording": "raw/v3/3 shorten.mov",
       "script": [
         "Rambling? One tap cuts it down to what you meant."
       ]
     },
     {
       "label": "Reply",
-      "recording": "raw/v2/6 reply.mov",
+      "recording": "raw/v3/6 reply.mov",
       "script": [
         "Don't know what to say? It writes the reply for you."
-      ]
+      ],
+      "start": 7.3
     },
     {
       "label": "Continue",
-      "recording": "raw/v2/8 continue.mov",
+      "recording": "raw/v3/8 continue.mov",
       "script": [
         "Start a sentence, and it finishes the thought."
       ]
     },
     {
       "label": "Voice",
-      "recording": "raw/v2/5 voice.mov",
+      "recording": "raw/v3/5 voice.mov",
       "script": [
         "Or just talk. It cleans up what you said, and types it for you."
       ]

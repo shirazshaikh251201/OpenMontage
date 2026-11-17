@@ -83,6 +83,8 @@ export interface Presenter {
 }
 
 export interface SceneProps {
+  /** Matches the recording's appearance; light footage gets a light band and dark text. */
+  theme?: "dark" | "light";
   /** Creator / avatar ad: presenter opens full-frame, then sits in a bubble over the demo. */
   presenter?: Presenter;
   /** Section markers for multi-feature promos. Omit for single-clip videos. */
@@ -174,7 +176,7 @@ const HookCard: React.FC<{ hook: Hook; fps: number }> = ({ hook, fps }) => {
 
 // Names the feature on screen in a multi-feature promo. Sits on an ink band at
 // the very top, which also covers the chat app's own notice text.
-const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ labels, fps }) => {
+const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number; light?: boolean }> = ({ labels, fps, light }) => {
   const frame = useCurrentFrame();
   const label = labels.find((l) => frame >= l.fromFrame && frame < l.toFrame);
   if (!label) return null;
@@ -216,7 +218,7 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
             fontSize: 74,
             lineHeight: 1.05,
             letterSpacing: "-0.02em",
-            color: CREAM,
+            color: light ? INK : CREAM,
           }}
         >
           {label.text}
@@ -230,7 +232,9 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
 
 // Ink band behind labels and captions. Covers the chat's old history (missed
 // calls, deleted-message chips) and gives the text a clean ground.
-const TopBand: React.FC<{ height: number }> = ({ height }) => (
+const TopBand: React.FC<{ height: number; light?: boolean }> = ({ height, light }) => {
+  const c = light ? CREAM : INK;
+  return (
   <AbsoluteFill>
     <div
       style={{
@@ -239,11 +243,12 @@ const TopBand: React.FC<{ height: number }> = ({ height }) => (
         left: 0,
         right: 0,
         height,
-        background: `linear-gradient(180deg, ${INK} 0%, ${INK} 80%, ${INK}00 100%)`,
+        background: `linear-gradient(180deg, ${c} 0%, ${c} 80%, ${c}00 100%)`,
       }}
     />
   </AbsoluteFill>
-);
+  );
+};
 
 /* ---------------------------- karaoke captions ---------------------------- */
 
@@ -253,11 +258,14 @@ const CaptionLayer: React.FC<{
   withLabels: boolean;
   /** creator ads: lower third while the presenter is full-frame, then the band */
   presenterIntroFrames?: number;
-}> = ({ pages, fps, withLabels, presenterIntroFrames }) => {
+  light?: boolean;
+}> = ({ pages, fps, withLabels, presenterIntroFrames, light }) => {
   const frame = useCurrentFrame();
   const ms = (frame / fps) * 1000;
   const page = pages.find((p) => ms >= p.startMs && ms < p.startMs + p.durationMs);
   if (!page) return null;
+  const inkText =
+    Boolean(light) && !(presenterIntroFrames !== undefined && frame < presenterIntroFrames);
 
   const enter = spring({
     frame: frame - (page.startMs / 1000) * fps,
@@ -295,15 +303,17 @@ const CaptionLayer: React.FC<{
             fontWeight: 600,
             fontSize: 62,
             lineHeight: 1.18,
-            color: "#FFFFFF",
-            WebkitTextStroke: `14px ${INK}`,
+            // on the light band: ink text with a cream stroke; over the
+            // presenter's face or dark footage: white text with an ink stroke
+            color: inkText ? INK : "#FFFFFF",
+            WebkitTextStroke: `14px ${inkText ? CREAM : INK}`,
             paintOrder: "stroke",
           }}
         >
           {page.tokens.map((t, i) => {
             const active = ms >= t.fromMs && ms < t.toMs;
             return (
-              <span key={i} style={{ whiteSpace: "pre", color: active ? ACCENT : "#FFFFFF" }}>
+              <span key={i} style={{ whiteSpace: "pre", color: active ? ACCENT : inkText ? INK : "#FFFFFF" }}>
                 {t.text}
               </span>
             );
@@ -446,8 +456,9 @@ const Cta: React.FC<{ cta: SceneProps["cta"]; fps: number }> = ({ cta, fps }) =>
 /* -------------------------------- scene -------------------------------- */
 
 export const Scene: React.FC<SceneProps> = ({
-  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps, labels, presenter,
+  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps, labels, presenter, theme,
 }) => {
+  const light = theme === "light";
   const intro = presenter?.introFrames ?? 0;
   const pages = useMemo(() => {
     // Page each script line on its own, so a page never ends with the first
@@ -486,12 +497,12 @@ export const Scene: React.FC<SceneProps> = ({
       ) : null}
 
       <Sequence from={intro} durationInFrames={videoDurationInFrames - intro} name="band">
-        <TopBand height={labels?.length ? 430 : 360} />
+        <TopBand height={labels?.length ? 430 : 360} light={light} />
       </Sequence>
 
       {labels?.length ? (
         <Sequence from={0} durationInFrames={videoDurationInFrames} name="labels">
-          <FeatureLabelLayer labels={labels} fps={fps} />
+          <FeatureLabelLayer labels={labels} fps={fps} light={light} />
         </Sequence>
       ) : null}
 
@@ -507,6 +518,7 @@ export const Scene: React.FC<SceneProps> = ({
           fps={fps}
           withLabels={Boolean(labels?.length)}
           presenterIntroFrames={presenter ? intro : undefined}
+          light={light}
         />
       </Sequence>
 
