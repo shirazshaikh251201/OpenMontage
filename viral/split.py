@@ -60,12 +60,23 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
                 if still:
                     long_ = [x for x in still if x.end - x.start >= 1.5] or still
                     wait = max(long_, key=lambda x: x.end)
-                    plan = [beats_mod.Segment(x.start, x.end, 1.0, "app working - real time")
-                            if x is wait else x for x in plan]
+                    # wait_seconds squeezes the app's wait to a set length (e.g.
+                    # 0.5s so it reads as instant); otherwise it plays at 1x
+                    # the spinner starts at the panel switch just before the still
+                    # stretch, so the wait runs from that beat to the result
+                    w0 = max([x.t for x in src_beats if wait.start - 2.0 < x.t < wait.start] or
+                             [wait.start - 0.15]) + 0.15
+                    ws = spec.get("wait_seconds")
+                    wspeed = max(1.0, (wait.end - w0) / ws) if ws else 1.0
+                    plan = beats_mod.retime(plan, w0, wait.end, round(wspeed, 4), "app working")
+                    wait = next(x for x in plan if x.reason == "app working")
                     # output time where the wait starts = where "watch this" goes
                     wait_out = sum(x.out_duration for x in plan if x.end <= wait.start + 1e-6)
         else:
             plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
+        for a_, b_ in seg.get("cut", []):
+            # drop glitch frames from the recording (e.g. an app redraw flicker)
+            plan = beats_mod.retime(plan, a_, b_, None, "cut")
         analysis = beats_mod.analyse(rec, plan)
         part = work / f"phone_{i}.mp4"
         graph = beats_mod.build_filter(plan) + \

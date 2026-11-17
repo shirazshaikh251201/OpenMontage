@@ -208,6 +208,29 @@ def cap_duration(segs: list[Segment], max_s: float) -> list[Segment]:
     return [Segment(s.start, s.end, round(s.speed * k, 4), s.reason) for s in segs]
 
 
+def retime(segs: list[Segment], a: float, b: float, speed: float | None, reason: str) -> list[Segment]:
+    """Set source range [a, b) to `speed`, or drop it entirely when speed is None."""
+    out: list[Segment] = []
+    for x in segs:
+        if x.end <= a or x.start >= b:
+            out.append(x)
+            continue
+        if x.start < a:
+            out.append(Segment(x.start, a, x.speed, x.reason))
+        if speed is not None:
+            out.append(Segment(max(x.start, a), min(x.end, b), speed, reason))
+        if x.end > b:
+            out.append(Segment(b, x.end, x.speed, x.reason))
+    merged: list[Segment] = []
+    for x in out:
+        if merged and merged[-1].reason == x.reason and abs(merged[-1].speed - x.speed) < 1e-6 \
+                and abs(merged[-1].end - x.start) < 1e-6:
+            merged[-1] = Segment(merged[-1].start, x.end, x.speed, x.reason)
+        else:
+            merged.append(x)
+    return merged
+
+
 def analyse(video: Path, segs: list[Segment] | None = None) -> dict:
     """Everything the rest of the pipeline needs to know about a recording."""
     segs = segs or plan_segments(video)

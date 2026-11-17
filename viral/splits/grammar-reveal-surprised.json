@@ -9,11 +9,18 @@
       "recording": "raw/v4/grammar-reveal.mov",
       "before": "Can you spot all 3 mistakes?",
       "wait": "Now watch this… 👀",
-      "after": "Fixed in one tap."
+      "after": "Fixed in one tap.",
+      "cut": [
+        [
+          28.64,
+          28.79
+        ]
+      ]
     }
   ],
   "cta_seconds": 3.5,
   "cta_line": "Start free — 2,000 AI words.",
   "reaction_y": 0.5,
-  "surprise_at": 5.0
+  "surprise_at": 5.0,
+  "wait_seconds": 0.5
 }
