@@ -49,6 +49,9 @@ def run(promo_path: Path, out_dir: Path, scale: float) -> Path:
         vo = voice_mod.narrate(seg["script"], work / f"vo_{i}")
         needed = LEAD + sum(v["duration"] for v in vo) + GAP * (len(vo) - 1) + TAIL
         plan = beats_mod.fit_to_duration(beats_mod.plan_segments(rec), needed)
+        # keep the pace: no section longer than the cap, unless its narration needs it
+        cap = max(needed, promo.get("max_segment_seconds", 99.0))
+        plan = beats_mod.cap_duration(plan, cap)
         analysis = beats_mod.analyse(rec, plan)
         part = work / f"seg_{i}.mp4"
         dur = pl.normalise(rec, part, plan, promo.get("crop"), needed)

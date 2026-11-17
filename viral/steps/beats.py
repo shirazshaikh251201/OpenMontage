@@ -193,6 +193,21 @@ def fit_to_duration(segs: list[Segment], target_s: float) -> list[Segment]:
     return [Segment(s.start, s.end, round(max(1.0, s.speed * lo), 4), s.reason) for s in segs]
 
 
+def cap_duration(segs: list[Segment], max_s: float) -> list[Segment]:
+    """Speed the whole plan up uniformly so the output runs at most `max_s`.
+
+    Used where one recording is a section of a longer video (the promo):
+    a busy clip such as Reply can otherwise run 16s and stall the pace.
+    Uniform scaling keeps the relative rhythm — decision moments still play
+    slower than typing, just not at 1x.
+    """
+    out = sum(s.out_duration for s in segs)
+    if out <= max_s:
+        return segs
+    k = out / max_s
+    return [Segment(s.start, s.end, round(s.speed * k, 4), s.reason) for s in segs]
+
+
 def analyse(video: Path, segs: list[Segment] | None = None) -> dict:
     """Everything the rest of the pipeline needs to know about a recording."""
     segs = segs or plan_segments(video)

@@ -36,13 +36,6 @@
       ]
     },
     {
-      "label": "Paraphrase",
-      "recording": "raw/v2/7 paraphrase.mov",
-      "script": [
-        "Paraphrase says the same thing, just better."
-      ]
-    },
-    {
       "label": "Reply",
       "recording": "raw/v2/6 reply.mov",
       "script": [
@@ -57,18 +50,12 @@
       ]
     },
     {
-      "label": "Synonyms",
-      "recording": "raw/v2/9 synonyms.mov",
-      "script": [
-        "Tap any word to find a better one."
-      ]
-    },
-    {
       "label": "Voice",
       "recording": "raw/v2/5 voice.mov",
       "script": [
         "Or just talk. It cleans up what you said, and types it for you."
       ]
     }
-  ]
+  ],
+  "max_segment_seconds": 8.0
 }
