@@ -15,7 +15,7 @@
   "segments": [
     {
       "label": "Grammar",
-      "recording": "raw/1.mov",
+      "recording": "raw/v2/1 grammar-three.mov",
       "script": [
         "One keyboard. Every message, fixed.",
         "Grammar mistakes? One tap, and all of them are gone."
@@ -23,18 +23,52 @@
     },
     {
       "label": "Tone",
-      "recording": "raw/2 proffesional.mov",
-      "script": ["Sounds too blunt? Pick from twenty two tones, and it rewrites the message for you."]
+      "recording": "raw/v2/2 professional.mov",
+      "script": [
+        "Too blunt? Pick from twenty two tones, and it rewrites the message for you."
+      ]
     },
     {
       "label": "Shorten",
-      "recording": "raw/3 shorten.mov",
-      "script": ["Rambling? Sixty five writing assistants can shorten it, reply for you, or rephrase it."]
+      "recording": "raw/v2/3 shorten.mov",
+      "script": [
+        "Rambling? One tap cuts it down to what you meant."
+      ]
+    },
+    {
+      "label": "Paraphrase",
+      "recording": "raw/v2/7 paraphrase.mov",
+      "script": [
+        "Paraphrase says the same thing, just better."
+      ]
+    },
+    {
+      "label": "Reply",
+      "recording": "raw/v2/6 reply.mov",
+      "script": [
+        "Don't know what to say? It writes the reply for you."
+      ]
+    },
+    {
+      "label": "Continue",
+      "recording": "raw/v2/8 continue.mov",
+      "script": [
+        "Start a sentence, and it finishes the thought."
+      ]
+    },
+    {
+      "label": "Synonyms",
+      "recording": "raw/v2/9 synonyms.mov",
+      "script": [
+        "Tap any word to find a better one."
+      ]
     },
     {
       "label": "Voice",
-      "recording": "raw/5 voice.mov",
-      "script": ["Or just talk. It cleans up what you said, and types it for you."]
+      "recording": "raw/v2/5 voice.mov",
+      "script": [
+        "Or just talk. It cleans up what you said, and types it for you."
+      ]
     }
   ]
 }

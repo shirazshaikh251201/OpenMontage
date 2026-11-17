@@ -176,20 +176,11 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
   });
   return (
     <AbsoluteFill>
+
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 330,
-          background: `linear-gradient(180deg, ${INK} 0%, ${INK} 72%, ${INK}00 100%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 62,
+          top: 44,
           left: 0,
           right: 0,
           textAlign: "center",
@@ -201,7 +192,7 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
           style={{
             fontFamily: SANS,
             fontWeight: 600,
-            fontSize: 30,
+            fontSize: 26,
             letterSpacing: "0.14em",
             color: ACCENT,
           }}
@@ -213,7 +204,7 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
             marginTop: 8,
             fontFamily: SERIF,
             fontWeight: 600,
-            fontSize: 96,
+            fontSize: 74,
             lineHeight: 1.05,
             letterSpacing: "-0.02em",
             color: CREAM,
@@ -226,9 +217,28 @@ const FeatureLabelLayer: React.FC<{ labels: FeatureLabel[]; fps: number }> = ({ 
   );
 };
 
+/* -------------------------------- top band -------------------------------- */
+
+// Ink band behind labels and captions. Covers the chat's old history (missed
+// calls, deleted-message chips) and gives the text a clean ground.
+const TopBand: React.FC<{ height: number }> = ({ height }) => (
+  <AbsoluteFill>
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height,
+        background: `linear-gradient(180deg, ${INK} 0%, ${INK} 80%, ${INK}00 100%)`,
+      }}
+    />
+  </AbsoluteFill>
+);
+
 /* ---------------------------- karaoke captions ---------------------------- */
 
-const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number }> = ({ pages, fps }) => {
+const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number; withLabels: boolean }> = ({ pages, fps, withLabels }) => {
   const frame = useCurrentFrame();
   const ms = (frame / fps) * 1000;
   const page = pages.find((p) => ms >= p.startMs && ms < p.startMs + p.durationMs);
@@ -245,13 +255,13 @@ const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number }> = ({ pages, f
       <div
         style={{
           position: "absolute",
-          // Sits in the empty chat area, above the message field. With the
-          // full-width crop (1170:2080:0:452) the tallest message field starts
-          // at y~650 and the suggestion bar at y~1050, so bottom:830 landed on
-          // the suggestion bar. Anchored by its bottom edge so a two-line page
-          // grows upward into blank space — never put the caption layer over
-          // the interface the ad is demonstrating.
-          bottom: 1340,
+          // Sits in the ink band at the top of the frame. The redesigned
+          // recordings have a real conversation above the message field (the
+          // incoming message gives the reply its context), so the chat area is
+          // no longer blank. The top ~400px only holds old history (missed
+          // calls, date chips), which the band covers. Never put captions over
+          // the keyboard or the message being fixed.
+          top: withLabels ? 236 : 150,
           left: 56,
           right: 56,
           textAlign: "center",
@@ -405,6 +415,10 @@ export const Scene: React.FC<SceneProps> = ({
         <Footage src={video} zooms={zooms ?? []} fps={fps} />
       </Sequence>
 
+      <Sequence from={0} durationInFrames={videoDurationInFrames} name="band">
+        <TopBand height={labels?.length ? 430 : 360} />
+      </Sequence>
+
       {labels?.length ? (
         <Sequence from={0} durationInFrames={videoDurationInFrames} name="labels">
           <FeatureLabelLayer labels={labels} fps={fps} />
@@ -416,7 +430,7 @@ export const Scene: React.FC<SceneProps> = ({
       </Sequence>
 
       <Sequence from={0} durationInFrames={videoDurationInFrames} name="captions">
-        <CaptionLayer pages={pages} fps={fps} />
+        <CaptionLayer pages={pages} fps={fps} withLabels={Boolean(labels?.length)} />
       </Sequence>
 
       <Sequence from={videoDurationInFrames} durationInFrames={cta.durationInFrames} name="cta">

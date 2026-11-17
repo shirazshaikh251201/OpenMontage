@@ -156,7 +156,11 @@ def run(recording: Path, concept_path: Path, out_dir: Path, scale: float, keep_d
           f"{', '.join(f'{o:.1f}s' for o in offsets)}")
 
     # 4 ── captions -----------------------------------------------------------
-    captions = voice_mod.captions_for(vo_segs, offsets, work)
+    # the hook card already shows the first line, and captions now share its
+    # top-of-frame position, so start them once the hook card is gone
+    hook_ms = concept.get("hook_seconds", 2.2) * 1000
+    captions = [c for c in voice_mod.captions_for(vo_segs, offsets, work)
+                if c["startMs"] >= hook_ms]
     print(f"  [4/6] captions: {len(captions)} words with timings")
 
     # 5 ── sound --------------------------------------------------------------
