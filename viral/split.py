@@ -45,10 +45,25 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     parts, headlines, beat_times, cursor = [], [], [], 0.0
     for i, seg in enumerate(spec["segments"]):
         rec = pl.ROOT / seg["recording"]
+        wait_out = None
         if spec.get("real_time"):
             # show how long it really takes: typing and the wait at 1x, only
             # idle air (before typing, after the result) trimmed
             plan = beats_mod.plan_segments(rec, typing_speed=1.0, dead_speed=2.5)
+            # the app's own wait ("Generating Text") shows as a still screen, so
+            # the plan would compress it; it is the thing viewers should see in
+            # real time, so the longest still stretch before the fix plays at 1x
+            src_beats = beats_mod.find_beats(rec)
+            if src_beats:
+                fix_src = max(src_beats, key=lambda x: x.strength).t
+                still = [x for x in plan if x.speed > 1.0 and x.end <= fix_src + 0.05]
+                if still:
+                    long_ = [x for x in still if x.end - x.start >= 1.5] or still
+                    wait = max(long_, key=lambda x: x.end)
+                    plan = [beats_mod.Segment(x.start, x.end, 1.0, "app working - real time")
+                            if x is wait else x for x in plan]
+                    # output time where the wait starts = where "watch this" goes
+                    wait_out = sum(x.out_duration for x in plan if x.end <= wait.start + 1e-6)
         else:
             plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
         analysis = beats_mod.analyse(rec, plan)
@@ -66,8 +81,11 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         a, b, c = cursor, cursor + fix, cursor + dur
         if seg.get("wait"):
             # third headline while the app is working: from the tap to the fix
-            taps = [x["t_out"] for x in beats if x["t_out"] < fix - 0.8]
-            tap = taps[-1] if taps else max(0.5, fix - 2.5)
+            if wait_out is not None:
+                tap = max(0.5, wait_out - 0.6)
+            else:
+                taps = [x["t_out"] for x in beats if x["t_out"] < fix - 0.8]
+                tap = taps[-1] if taps else max(0.5, fix - 2.5)
             headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round((cursor + tap) * fps)})
             headlines.append({"text": seg["wait"], "fromFrame": round((cursor + tap) * fps), "toFrame": round(b * fps)})
         else:
