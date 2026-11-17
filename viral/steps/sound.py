@@ -120,15 +120,18 @@ def music_bed(duration: float, bpm: float = 120.0, style: str = "punchy") -> np.
 
 
 def suspense_bed(duration: float, reveal_t: float) -> np.ndarray:
-    """Tension that builds to `reveal_t`, a short gap, then a bright payoff.
+    """Thriller-style tension that resolves exactly at `reveal_t`.
 
-    Low detuned drone + a heartbeat that speeds up + a rising sweep in the last
-    ~2.5s, cut to silence for a beat, then a major-chord stab with a shimmer
-    and a light pulse under the result.
+    A dissonant minor string pad with a tremolo that quickens, a clock-like
+    tick that speeds up, and a rising sweep in the last ~2.5s. Everything cuts
+    for a breath before the reveal, which lands as a bright major stab with a
+    shimmer, followed by a light plucked arpeggio under the result.
+    (No kick/heartbeat thumps — tension comes from harmony and the tick.)
     """
     n = int(duration * SR)
     mix = np.zeros(n)
     t = np.arange(n) / SR
+    rng = np.random.default_rng(11)
 
     def place(start_s: float, sig: np.ndarray) -> None:
         i = int(start_s * SR)
@@ -137,46 +140,68 @@ def suspense_bed(duration: float, reveal_t: float) -> np.ndarray:
         j = min(n, i + len(sig))
         mix[i:j] += sig[: j - i]
 
-    pre = t < reveal_t
-    # drone: two detuned lows, swelling toward the reveal
-    swell = np.clip(t / max(reveal_t, 0.1), 0, 1) ** 1.5
-    drone = (np.sin(2 * np.pi * 55.0 * t) + 0.7 * np.sin(2 * np.pi * 55.6 * t)
-             + 0.35 * np.sin(2 * np.pi * 82.4 * t)) * (0.10 + 0.22 * swell)
-    mix += drone * pre
-    # heartbeat: double thump, interval shrinking from 0.9s to 0.4s
-    k = 0.3
-    while k < reveal_t - 0.35:
-        place(k, thump(0.18, 0.55))
-        place(k + 0.17, thump(0.14, 0.35))
-        k += 0.9 - 0.5 * min(1.0, k / max(reveal_t, 0.1))
-    # riser: exponential sweep over the last 2.5s before the reveal
+    def pluck(freq: float, length: float, amp: float, decay: float = 9.0) -> np.ndarray:
+        m = int(length * SR)
+        x = np.arange(m) / SR
+        return amp * (np.sin(2 * np.pi * freq * x) + 0.3 * np.sin(4 * np.pi * freq * x)) * np.exp(-decay * x)
+
+    gap = 0.14                                   # silence right before the reveal
+    pre = t < (reveal_t - gap)
+    k = np.clip(t / max(reveal_t, 0.1), 0, 1)    # 0 -> 1 across the build
+
+    # dissonant string pad: A, C, Eb, plus a rubbing Bb, each lightly detuned
+    pad = np.zeros(n)
+    for f0, a0 in ((110.0, 1.0), (130.81, 0.8), (155.56, 0.7), (233.08, 0.35)):
+        for det in (-0.6, 0.6):
+            pad += a0 * np.sin(2 * np.pi * (f0 + det) * t + rng.uniform(0, 6.28))
+    trem_rate = 3.0 + 7.0 * k ** 2               # tremolo speeds up toward the reveal
+    trem = 0.75 + 0.25 * np.sin(2 * np.pi * np.cumsum(trem_rate) / SR)
+    swell = 0.035 + 0.075 * k ** 1.6
+    attack = np.clip(t / 1.2, 0, 1)
+    mix += pad * trem * swell * attack * pre
+
+    # ticking clock: alternating high plucks, interval 0.55s -> 0.16s
+    x = 0.4
+    i = 0
+    while x < reveal_t - gap - 0.05:
+        place(x, pluck(1318.5 if i % 2 == 0 else 1244.5, 0.09, 0.10 + 0.08 * min(1, x / reveal_t), 60.0))
+        x += 0.55 - 0.39 * min(1.0, x / max(reveal_t, 0.1)) ** 1.4
+        i += 1
+
+    # riser: sweep + airy noise over the last 2.5s
     r0 = max(0.0, reveal_t - 2.5)
-    m = int((reveal_t - 0.12 - r0) * SR)
+    m = int((reveal_t - gap - r0) * SR)
     if m > 0:
         rt = np.arange(m) / SR
-        f = 200 * (8 ** (rt / (m / SR)))
+        f = 180 * (10 ** (rt / (m / SR)))
         phase = 2 * np.pi * np.cumsum(f) / SR
-        noise = np.random.default_rng(7).standard_normal(m) * 0.05
-        place(r0, (0.16 * np.sin(phase) + noise) * np.linspace(0, 1, m) ** 2)
-    # payoff: C-major stab + shimmer, then a light pulse under the result
-    stab_len = 1.6
-    sm = int(stab_len * SR)
+        ramp = np.linspace(0, 1, m) ** 2.2
+        place(r0, (0.09 * np.sin(phase) + 0.05 * rng.standard_normal(m)) * ramp)
+
+    # reveal: bright major stab + shimmer + a soft low boom
+    sm = int(2.2 * SR)
     st = np.arange(sm) / SR
-    chord = sum(np.sin(2 * np.pi * f0 * st) for f0 in (523.25, 659.25, 783.99, 1046.5))
-    place(reveal_t, 0.22 * chord * _env(sm, 0.004, 2.2))
-    place(reveal_t, ding(1318.5, 0.9, 0.3))
-    place(reveal_t, thump(0.35, 0.8))
-    beat = 0.5
-    b = reveal_t + 0.5
-    while b < duration - 0.3:
-        place(b, thump(0.2, 0.35))
-        place(b + beat / 2, keystroke(seed=int(b * 10), amp=0.12))
-        b += beat
+    chord = sum(np.sin(2 * np.pi * f0 * st) for f0 in (261.63, 329.63, 392.0, 523.25, 659.25))
+    place(reveal_t, 0.16 * chord * np.exp(-1.6 * st))
+    place(reveal_t, ding(1567.98, 1.1, 0.22))
+    place(reveal_t + 0.06, ding(2093.0, 0.9, 0.14))
+    bm = int(1.2 * SR)
+    bt = np.arange(bm) / SR
+    place(reveal_t, 0.5 * np.sin(2 * np.pi * (55 + 40 * np.exp(-8 * bt)) * bt) * np.exp(-3.5 * bt))
+
+    # after: light plucked C-major arpeggio, no drums
+    notes = (523.25, 659.25, 783.99, 1046.5)
+    x = reveal_t + 0.9
+    i = 0
+    while x < duration - 0.4:
+        place(x, pluck(notes[i % 4], 0.5, 0.11, 6.0))
+        x += 0.25
+        i += 1
 
     fo = int(min(0.8, duration * 0.15) * SR)
     if fo:
         mix[-fo:] *= np.linspace(1, 0, fo)
-    return np.tanh(mix * 0.9)
+    return np.tanh(mix * 1.1)
 
 
 def design(

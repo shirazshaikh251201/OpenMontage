@@ -147,6 +147,7 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         "revealFrame": round(reveal * fps),
         "reactionFocusX": spec.get("reaction_focus_x", 0.5),
         "reactionFocusY": spec.get("reaction_focus_y", 0.5),
+        **({"surpriseAt": spec["surprise_at"]} if "surprise_at" in spec else {}),
         "bodyFrames": body_frames, "headlines": headlines, "audio": track.name,
         "cta": {"durationInFrames": int(cta_s * fps), "wordmark": "Type Better",
                 "line": spec.get("cta_line", "Start free — 2,000 AI words."),

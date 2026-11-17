@@ -39,6 +39,10 @@ export interface SplitProps {
   /** where the face is in the strip, 0-1, so the zoom lands on it */
   reactionFocusX?: number;
   reactionFocusY?: number;
+  /** seconds into the reaction clip where the animal is genuinely startled;
+   *  when set, the clip is timed so that moment lands on revealFrame and the
+   *  edited crash zoom is skipped */
+  surpriseAt?: number;
   bodyFrames: number;
   headlines: Headline[];
   audio?: string | null;
@@ -95,9 +99,46 @@ const HeadlineLayer: React.FC<{ headlines: Headline[]; fps: number }> = ({ headl
   );
 };
 
+// Calm part of the clip loops until the final play-through, which starts so the
+// clip's own "startled" moment lands exactly on the fix; its last second then
+// holds by looping until the end card.
+const TimedReaction: React.FC<{
+  src: string;
+  clipFrames: number;
+  surpriseFrame: number;
+  revealFrame: number;
+  bodyFrames: number;
+}> = ({ src, clipFrames, surpriseFrame, revealFrame, bodyFrames }) => {
+  const style = { width: "100%", height: "100%", objectFit: "cover" as const };
+  const start = Math.max(0, revealFrame - surpriseFrame);
+  const calm = Math.max(15, surpriseFrame - 20);
+  const tail = Math.min(30, clipFrames);
+  return (
+    <>
+      {start > 0 ? (
+        <Sequence from={0} durationInFrames={start}>
+          <Loop durationInFrames={calm}>
+            <OffthreadVideo src={staticFile(src)} muted endAt={calm} style={style} />
+          </Loop>
+        </Sequence>
+      ) : null}
+      <Sequence from={start} durationInFrames={clipFrames}>
+        <OffthreadVideo src={staticFile(src)} muted startFrom={Math.max(0, surpriseFrame - revealFrame)} style={style} />
+      </Sequence>
+      {start + clipFrames < bodyFrames ? (
+        <Sequence from={start + clipFrames} durationInFrames={bodyFrames - start - clipFrames}>
+          <Loop durationInFrames={tail}>
+            <OffthreadVideo src={staticFile(src)} muted startFrom={clipFrames - tail} style={style} />
+          </Loop>
+        </Sequence>
+      ) : null}
+    </>
+  );
+};
+
 export const SplitMeme: React.FC<SplitProps> = ({
   phone, phoneWidth, phoneHeight, reaction, reactionFrames, bodyFrames, headlines, audio, cta, fps,
-  revealFrame, reactionFocusX, reactionFocusY,
+  revealFrame, reactionFocusX, reactionFocusY, surpriseAt,
 }) => {
   const frame = useCurrentFrame();
   const left = (1080 - phoneWidth) / 2;
@@ -105,7 +146,8 @@ export const SplitMeme: React.FC<SplitProps> = ({
   const pop = interpolate(frame, [0, 8], [0.96, 1], { extrapolateRight: "clamp" });
 
   // Crash zoom on the fix: snap in over 3 frames, shake, hold, ease back.
-  const r = revealFrame ?? -999;
+  const real = surpriseAt !== undefined && revealFrame !== undefined;
+  const r = real ? -999 : revealFrame ?? -999;
   const d = frame - r;
   const zoom =
     d < 0 ? 1 : d < 3 ? interpolate(d, [0, 3], [1, 1.75]) : d < 45 ? 1.75 : interpolate(d, [45, 60], [1.75, 1], { extrapolateRight: "clamp" });
@@ -131,6 +173,15 @@ export const SplitMeme: React.FC<SplitProps> = ({
               background: INK,
             }}
           >
+            {real ? (
+              <TimedReaction
+                src={reaction}
+                clipFrames={reactionFrames}
+                surpriseFrame={Math.round((surpriseAt as number) * fps)}
+                revealFrame={revealFrame as number}
+                bodyFrames={bodyFrames}
+              />
+            ) : (
             <Loop durationInFrames={reactionFrames}>
               <OffthreadVideo
                 src={staticFile(reaction)}
@@ -144,6 +195,7 @@ export const SplitMeme: React.FC<SplitProps> = ({
                 }}
               />
             </Loop>
+            )}
             <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
           </div>
 
