@@ -75,7 +75,16 @@ export interface FeatureLabel {
   toFrame: number;
 }
 
+export interface Presenter {
+  /** Talking-head clip in public/ (creator or AI avatar), audio stripped. */
+  src: string;
+  /** Frames the presenter fills the screen before cutting to the demo. */
+  introFrames: number;
+}
+
 export interface SceneProps {
+  /** Creator / avatar ad: presenter opens full-frame, then sits in a bubble over the demo. */
+  presenter?: Presenter;
   /** Section markers for multi-feature promos. Omit for single-clip videos. */
   labels?: FeatureLabel[];
   video: string;
@@ -238,7 +247,13 @@ const TopBand: React.FC<{ height: number }> = ({ height }) => (
 
 /* ---------------------------- karaoke captions ---------------------------- */
 
-const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number; withLabels: boolean }> = ({ pages, fps, withLabels }) => {
+const CaptionLayer: React.FC<{
+  pages: TikTokPage[];
+  fps: number;
+  withLabels: boolean;
+  /** creator ads: lower third while the presenter is full-frame, then the band */
+  presenterIntroFrames?: number;
+}> = ({ pages, fps, withLabels, presenterIntroFrames }) => {
   const frame = useCurrentFrame();
   const ms = (frame / fps) * 1000;
   const page = pages.find((p) => ms >= p.startMs && ms < p.startMs + p.durationMs);
@@ -261,9 +276,15 @@ const CaptionLayer: React.FC<{ pages: TikTokPage[]; fps: number; withLabels: boo
           // no longer blank. The top ~400px only holds old history (missed
           // calls, date chips), which the band covers. Never put captions over
           // the keyboard or the message being fixed.
-          top: withLabels ? 236 : 150,
+          top:
+            presenterIntroFrames !== undefined && frame < presenterIntroFrames
+              ? 1260
+              : withLabels
+              ? 236
+              : 150,
           left: 56,
-          right: 56,
+          // leave room for the presenter bubble in the top-right corner
+          right: presenterIntroFrames !== undefined && frame >= presenterIntroFrames ? 330 : 56,
           textAlign: "center",
           transform: `translateY(${(1 - enter) * 18}px) scale(${0.96 + enter * 0.04})`,
         }}
@@ -320,6 +341,48 @@ const Footage: React.FC<{ src: string; zooms: ZoomBeat[]; fps: number }> = ({ sr
         style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})` }}
         muted
       />
+    </AbsoluteFill>
+  );
+};
+
+/* ------------------------------- presenter ------------------------------- */
+
+// Full-frame talking head for the hook, then a round bubble in the top band so
+// the face stays on screen while the demo plays.
+const PresenterFull: React.FC<{ src: string }> = ({ src }) => (
+  <AbsoluteFill style={{ background: INK }}>
+    <OffthreadVideo src={staticFile(src)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+  </AbsoluteFill>
+);
+
+const PresenterBubble: React.FC<{ src: string; startFrom: number; fps: number }> = ({ src, startFrom, fps }) => {
+  const frame = useCurrentFrame();
+  const s = spring({ frame, fps, config: { damping: 200, mass: 0.5, stiffness: 220 } });
+  const size = 250;
+  return (
+    <AbsoluteFill>
+      <div
+        style={{
+          position: "absolute",
+          top: 70,
+          right: 44,
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          overflow: "hidden",
+          border: `6px solid ${CREAM}`,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.45)",
+          transform: `scale(${0.6 + s * 0.4})`,
+          opacity: s,
+        }}
+      >
+        <OffthreadVideo
+          src={staticFile(src)}
+          startFrom={startFrom}
+          muted
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
     </AbsoluteFill>
   );
 };
@@ -383,8 +446,9 @@ const Cta: React.FC<{ cta: SceneProps["cta"]; fps: number }> = ({ cta, fps }) =>
 /* -------------------------------- scene -------------------------------- */
 
 export const Scene: React.FC<SceneProps> = ({
-  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps, labels,
+  video, videoDurationInFrames, hook, captions, zooms, audio, cta, fps, labels, presenter,
 }) => {
+  const intro = presenter?.introFrames ?? 0;
   const pages = useMemo(() => {
     // Page each script line on its own, so a page never ends with the first
     // word of the next sentence.
@@ -411,11 +475,17 @@ export const Scene: React.FC<SceneProps> = ({
       <FontFaces />
       {audio ? <Audio src={staticFile(audio)} /> : null}
 
-      <Sequence from={0} durationInFrames={videoDurationInFrames} name="footage">
+      <Sequence from={intro} durationInFrames={videoDurationInFrames - intro} name="footage">
         <Footage src={video} zooms={zooms ?? []} fps={fps} />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={videoDurationInFrames} name="band">
+      {presenter ? (
+        <Sequence from={0} durationInFrames={intro} name="presenter">
+          <PresenterFull src={presenter.src} />
+        </Sequence>
+      ) : null}
+
+      <Sequence from={intro} durationInFrames={videoDurationInFrames - intro} name="band">
         <TopBand height={labels?.length ? 430 : 360} />
       </Sequence>
 
@@ -425,13 +495,26 @@ export const Scene: React.FC<SceneProps> = ({
         </Sequence>
       ) : null}
 
-      <Sequence from={0} durationInFrames={hook.durationInFrames} name="hook">
-        <HookCard hook={hook} fps={fps} />
-      </Sequence>
+      {hook.durationInFrames > 0 ? (
+        <Sequence from={0} durationInFrames={hook.durationInFrames} name="hook">
+          <HookCard hook={hook} fps={fps} />
+        </Sequence>
+      ) : null}
 
       <Sequence from={0} durationInFrames={videoDurationInFrames} name="captions">
-        <CaptionLayer pages={pages} fps={fps} withLabels={Boolean(labels?.length)} />
+        <CaptionLayer
+          pages={pages}
+          fps={fps}
+          withLabels={Boolean(labels?.length)}
+          presenterIntroFrames={presenter ? intro : undefined}
+        />
       </Sequence>
+
+      {presenter ? (
+        <Sequence from={intro} durationInFrames={videoDurationInFrames - intro} name="presenter-bubble">
+          <PresenterBubble src={presenter.src} startFrom={intro} fps={fps} />
+        </Sequence>
+      ) : null}
 
       <Sequence from={videoDurationInFrames} durationInFrames={cta.durationInFrames} name="cta">
         <Cta cta={cta} fps={fps} />
