@@ -45,7 +45,12 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     parts, headlines, beat_times, cursor = [], [], [], 0.0
     for i, seg in enumerate(spec["segments"]):
         rec = pl.ROOT / seg["recording"]
-        plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
+        if spec.get("real_time"):
+            # show how long it really takes: typing and the wait at 1x, only
+            # idle air (before typing, after the result) trimmed
+            plan = beats_mod.plan_segments(rec, typing_speed=1.0, dead_speed=2.5)
+        else:
+            plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
         analysis = beats_mod.analyse(rec, plan)
         part = work / f"phone_{i}.mp4"
         graph = beats_mod.build_filter(plan) + \
@@ -59,9 +64,17 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         # the fix lands on the section's strongest change
         fix = max(beats, key=lambda b: b["strength"])["t_out"] if beats else dur * 0.6
         a, b, c = cursor, cursor + fix, cursor + dur
-        headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round(b * fps)})
+        if seg.get("wait"):
+            # third headline while the app is working: from the tap to the fix
+            taps = [x["t_out"] for x in beats if x["t_out"] < fix - 0.8]
+            tap = taps[-1] if taps else max(0.5, fix - 2.5)
+            headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round((cursor + tap) * fps)})
+            headlines.append({"text": seg["wait"], "fromFrame": round((cursor + tap) * fps), "toFrame": round(b * fps)})
+        else:
+            headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round(b * fps)})
         headlines.append({"text": seg["after"], "check": True, "fromFrame": round(b * fps), "toFrame": round(c * fps)})
         beat_times += [round(cursor + x["t_out"], 3) for x in beats]
+        reveal = cursor + fix
         print(f"  [{i + 1}/{len(spec['segments'])}] {rec.name}: {analysis['source_duration']}s -> {dur:.2f}s, fix at {fix:.2f}s")
         parts.append(part)
         cursor += dur
@@ -85,8 +98,19 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     cta_s = spec.get("cta_seconds", 3.5)
     total = cursor + cta_s
     track = pub / f"{slug}_audio.mp3"
-    sound_mod.design(track, total, beat_times + [round(cursor, 3)], typing_runs=None,
-                     bpm=spec.get("bpm", 120), style=spec.get("music_style", "punchy"), music_gain=0.55)
+    if spec.get("music_style") == "suspense":
+        import wave
+        import numpy as np
+        sig = sound_mod.suspense_bed(total, reveal)
+        pcm = (np.stack([sig, sig], axis=1) * 0.85 * 32767).astype(np.int16)
+        wav = work / "suspense.wav"
+        with wave.open(str(wav), "wb") as w:
+            w.setnchannels(2); w.setsampwidth(2); w.setframerate(sound_mod.SR)
+            w.writeframes(pcm.tobytes())
+        pl.sh(["ffmpeg", "-v", "error", "-i", str(wav), "-b:a", "192k", "-y", str(track)])
+    else:
+        sound_mod.design(track, total, beat_times + [round(cursor, 3)], typing_runs=None,
+                         bpm=spec.get("bpm", 120), style=spec.get("music_style", "punchy"), music_gain=0.55)
 
     props = {
         "phone": phone.name, "phoneWidth": PHONE_W, "phoneHeight": PHONE_H,

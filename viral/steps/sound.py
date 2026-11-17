@@ -119,6 +119,66 @@ def music_bed(duration: float, bpm: float = 120.0, style: str = "punchy") -> np.
     return np.tanh(mix * 0.9)
 
 
+def suspense_bed(duration: float, reveal_t: float) -> np.ndarray:
+    """Tension that builds to `reveal_t`, a short gap, then a bright payoff.
+
+    Low detuned drone + a heartbeat that speeds up + a rising sweep in the last
+    ~2.5s, cut to silence for a beat, then a major-chord stab with a shimmer
+    and a light pulse under the result.
+    """
+    n = int(duration * SR)
+    mix = np.zeros(n)
+    t = np.arange(n) / SR
+
+    def place(start_s: float, sig: np.ndarray) -> None:
+        i = int(start_s * SR)
+        if i >= n or i < 0:
+            return
+        j = min(n, i + len(sig))
+        mix[i:j] += sig[: j - i]
+
+    pre = t < reveal_t
+    # drone: two detuned lows, swelling toward the reveal
+    swell = np.clip(t / max(reveal_t, 0.1), 0, 1) ** 1.5
+    drone = (np.sin(2 * np.pi * 55.0 * t) + 0.7 * np.sin(2 * np.pi * 55.6 * t)
+             + 0.35 * np.sin(2 * np.pi * 82.4 * t)) * (0.10 + 0.22 * swell)
+    mix += drone * pre
+    # heartbeat: double thump, interval shrinking from 0.9s to 0.4s
+    k = 0.3
+    while k < reveal_t - 0.35:
+        place(k, thump(0.18, 0.55))
+        place(k + 0.17, thump(0.14, 0.35))
+        k += 0.9 - 0.5 * min(1.0, k / max(reveal_t, 0.1))
+    # riser: exponential sweep over the last 2.5s before the reveal
+    r0 = max(0.0, reveal_t - 2.5)
+    m = int((reveal_t - 0.12 - r0) * SR)
+    if m > 0:
+        rt = np.arange(m) / SR
+        f = 200 * (8 ** (rt / (m / SR)))
+        phase = 2 * np.pi * np.cumsum(f) / SR
+        noise = np.random.default_rng(7).standard_normal(m) * 0.05
+        place(r0, (0.16 * np.sin(phase) + noise) * np.linspace(0, 1, m) ** 2)
+    # payoff: C-major stab + shimmer, then a light pulse under the result
+    stab_len = 1.6
+    sm = int(stab_len * SR)
+    st = np.arange(sm) / SR
+    chord = sum(np.sin(2 * np.pi * f0 * st) for f0 in (523.25, 659.25, 783.99, 1046.5))
+    place(reveal_t, 0.22 * chord * _env(sm, 0.004, 2.2))
+    place(reveal_t, ding(1318.5, 0.9, 0.3))
+    place(reveal_t, thump(0.35, 0.8))
+    beat = 0.5
+    b = reveal_t + 0.5
+    while b < duration - 0.3:
+        place(b, thump(0.2, 0.35))
+        place(b + beat / 2, keystroke(seed=int(b * 10), amp=0.12))
+        b += beat
+
+    fo = int(min(0.8, duration * 0.15) * SR)
+    if fo:
+        mix[-fo:] *= np.linspace(1, 0, fo)
+    return np.tanh(mix * 0.9)
+
+
 def design(
     out: Path,
     duration: float,
