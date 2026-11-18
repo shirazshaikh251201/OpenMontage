@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from viral import pipeline as pl  # noqa: E402
 from viral.steps import beats as beats_mod  # noqa: E402
 from viral.steps import sound as sound_mod  # noqa: E402
+from viral.steps import voice as voice_mod  # noqa: E402
 
 # Source rows 1120-2330 of a 1170x2532 iPhone recording: the message field,
 # suggestion bar and keys, without the chat history or the globe/mic row.
@@ -43,6 +44,7 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     fps = pl.FPS
 
     parts, headlines, beat_times, cursor = [], [], [], 0.0
+    voices: list[tuple[Path, float]] = []      # spoken lines and where they start
     for i, seg in enumerate(spec["segments"]):
         rec = pl.ROOT / seg["recording"]
         wait_out = None
@@ -74,7 +76,18 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
                     wait_out = sum(x.out_duration for x in plan if x.end <= wait.start + 1e-6)
         else:
             plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
-        for r in seg.get("real_ranges", []):
+        ranges = list(seg.get("real_ranges", []))
+        voice_win = None
+        if seg.get("voice"):
+            # a spoken line over the app's "Listening" stretch: the recordings
+            # are silent, so the viewer hears what was said into the app
+            v = seg["voice"]
+            vpath = work / f"voice_{i}.wav"
+            vdur = voice_mod.speak_elevenlabs(v["text"], vpath, voice=v.get("voice_id"))
+            w0, w1 = v["window"]
+            ranges.append([w0, w1, max(0.25, (w1 - w0) / (vdur + 0.7))])
+            voice_win = (w0, vpath)
+        for r in ranges:
             # stretches that must play at 1x (or slower, given as a third value),
             # e.g. the bad sentence sitting on screen while the countdown runs
             # and viewers hunt for mistakes; a still screen can be slowed freely
@@ -86,6 +99,11 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         for a_, b_ in seg.get("cut", []):
             # drop glitch frames from the recording (e.g. an app redraw flicker)
             plan = beats_mod.retime(plan, a_, b_, None, "cut")
+        voice_out = None
+        if voice_win:
+            voice_out = sum((min(x.end, voice_win[0]) - x.start) / x.speed
+                            for x in plan if x.start < voice_win[0]) + 0.3
+            voices.append((voice_win[1], cursor + voice_out))
         analysis = beats_mod.analyse(rec, plan)
         part = work / f"phone_{i}.mp4"
         graph = beats_mod.build_filter(plan) + \
@@ -98,6 +116,11 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         beats = [b for b in analysis["beats"] if 0.3 < b["t_out"] < dur - 0.3]
         # the fix lands on the section's strongest change
         fix = max(beats, key=lambda b: b["strength"])["t_out"] if beats else dur * 0.6
+        if seg.get("fix_at") is not None:
+            # the biggest change isn't always the fix (e.g. the keyboard switching
+            # to "Listening"); fix_at pins it to a source time
+            fix = sum((min(x.end, seg["fix_at"]) - x.start) / x.speed
+                      for x in plan if x.start < seg["fix_at"])
         a, b, c = cursor, cursor + fix, cursor + dur
         before = seg["before"]
         if isinstance(before, list):
@@ -116,6 +139,14 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
                 taps = [x["t_out"] for x in beats if x["t_out"] < fix - 0.8]
                 tap = taps[-1] if taps else max(0.5, fix - 2.5)
             t0 = a
+            if voice_out is not None and seg.get("quote"):
+                # hook until the speech starts, then what is being said
+                headlines.append({"text": seg["before"], "fromFrame": round(a * fps),
+                                  "toFrame": round((cursor + voice_out) * fps)})
+                seg = dict(seg)
+                seg["before"] = seg["quote"]
+                t0 = cursor + voice_out
+                steps = []
             if steps:
                 span = (cursor + tap - a) / (len(steps) + 1)
                 for k_, txt in enumerate(steps):
@@ -168,6 +199,7 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     cta_s = spec.get("cta_seconds", 3.5)
     total = cursor + cta_s
     track = pub / f"{slug}_audio.mp3"
+    bed_out = (work / "bed.wav") if voices else track
     if spec.get("music_style") == "suspense":
         import wave
         import numpy as np
@@ -177,10 +209,21 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         with wave.open(str(wav), "wb") as w:
             w.setnchannels(2); w.setsampwidth(2); w.setframerate(sound_mod.SR)
             w.writeframes(pcm.tobytes())
-        pl.sh(["ffmpeg", "-v", "error", "-i", str(wav), "-b:a", "192k", "-y", str(track)])
+        pl.sh(["ffmpeg", "-v", "error", "-i", str(wav), "-b:a", "192k", "-y", str(bed_out)])
     else:
-        sound_mod.design(track, total, beat_times + [round(cursor, 3)], typing_runs=None,
+        sound_mod.design(bed_out, total, beat_times + [round(cursor, 3)], typing_runs=None,
                          bpm=spec.get("bpm", 120), style=spec.get("music_style", "punchy"), music_gain=0.55)
+    if voices:
+        # lay the spoken lines on one track, then duck the music under them
+        vt = work / "voices.wav"
+        ins = [x for v_, _ in voices for x in ("-i", str(v_))]
+        g = ";".join(f"[{k}:a]aresample=48000,adelay={int(t * 1000)}|{int(t * 1000)}[v{k}]"
+                     for k, (_, t) in enumerate(voices))
+        g += ";" + "".join(f"[v{k}]" for k in range(len(voices))) + \
+            f"amix=inputs={len(voices)}:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11,apad,atrim=0:{total:.3f}[o]"
+        pl.sh(["ffmpeg", "-v", "error", *ins, "-filter_complex", g, "-map", "[o]",
+               "-ar", "48000", "-ac", "2", "-y", str(vt)])
+        sound_mod.mix_with_voice(vt, bed_out, track, total)
 
     props = {
         "phone": phone.name, "phoneWidth": PHONE_W, "phoneHeight": PHONE_H,

@@ -1,0 +1,41 @@
+{
+  "slug": "split-voice-ums",
+  "name": "Voice: talk messy, send clean",
+  "reaction": "raw/reaction/pexels/04-dog-confused-looking-up.mp4",
+  "real_time": true,
+  "music_style": "punchy",
+  "bpm": 112,
+  "segments": [
+    {
+      "recording": "raw/v3/5 voice.mov",
+      "real_ranges": [
+        [
+          0.0,
+          0.67,
+          0.4
+        ],
+        [
+          8.3,
+          10.0,
+          3.4
+        ]
+      ],
+      "voice": {
+        "text": "Um, so like... tell Rahul I'll be, uh... ten minutes late. Sorry.",
+        "voice_id": "x9wViLHrpGxKBhkUybpR",
+        "window": [
+          0.67,
+          8.3
+        ]
+      },
+      "before": "Stop typing. Just talk. 🎙️",
+      "quote": "“Um, so like… tell Rahul I'll be, uh… 10 minutes late…”",
+      "wait": "Watch this… 👀",
+      "tap_at": 8.4,
+      "after": "No ums. Just the message.",
+      "outro": "Would you rather type or talk? 👇",
+      "fix_at": 10.0
+    }
+  ],
+  "cta_seconds": 2.5
+}
