@@ -1,0 +1,34 @@
+{
+  "slug": "split-spot-3-mistakes",
+  "name": "Spot the 3 mistakes — before the cat does",
+  "reaction": "raw/reaction/cat-surprised.mp4",
+  "reaction_y": 0.5,
+  "surprise_at": 5.0,
+  "real_time": true,
+  "wait_seconds": 0.5,
+  "music_style": "suspense",
+  "segments": [
+    {
+      "recording": "raw/v3/1 grammar-three.mov",
+      "before": [
+        "Find all 3 mistakes 👀",
+        "3…",
+        "2…",
+        "1…"
+      ],
+      "wait": "Too slow 😏",
+      "after": "Fixed in one tap.",
+      "outro": "How many did you get? 👇",
+      "real_ranges": [
+        [
+          0.0,
+          2.45,
+          0.7
+        ]
+      ],
+      "tap_at": 2.5
+    }
+  ],
+  "cta_seconds": 2.5,
+  "cta_line": "Start free — 2,000 AI words."
+}

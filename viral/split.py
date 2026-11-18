@@ -74,6 +74,15 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
                     wait_out = sum(x.out_duration for x in plan if x.end <= wait.start + 1e-6)
         else:
             plan = beats_mod.cap_duration(beats_mod.plan_segments(rec), spec.get("max_segment_seconds", 7.0))
+        for r in seg.get("real_ranges", []):
+            # stretches that must play at 1x (or slower, given as a third value),
+            # e.g. the bad sentence sitting on screen while the countdown runs
+            # and viewers hunt for mistakes; a still screen can be slowed freely
+            plan = beats_mod.retime(plan, r[0], r[1], r[2] if len(r) > 2 else 1.0, "hold for the viewer")
+        if seg.get("tap_at") is not None:
+            # source time of the tap: the "while it works" headline starts here
+            wait_out = sum((min(x.end, seg["tap_at"]) - x.start) / x.speed
+                           for x in plan if x.start < seg["tap_at"]) + 0.6
         for a_, b_ in seg.get("cut", []):
             # drop glitch frames from the recording (e.g. an app redraw flicker)
             plan = beats_mod.retime(plan, a_, b_, None, "cut")
@@ -90,6 +99,15 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         # the fix lands on the section's strongest change
         fix = max(beats, key=lambda b: b["strength"])["t_out"] if beats else dur * 0.6
         a, b, c = cursor, cursor + fix, cursor + dur
+        before = seg["before"]
+        if isinstance(before, list):
+            # a sequence of headlines across the build-up (e.g. a countdown);
+            # the last one is shown up to the tap, and the rest share the time before it
+            seg = dict(seg)
+            seg["before"] = before[-1]
+            steps = before[:-1]
+        else:
+            steps = []
         if seg.get("wait"):
             # third headline while the app is working: from the tap to the fix
             if wait_out is not None:
@@ -97,11 +115,24 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
             else:
                 taps = [x["t_out"] for x in beats if x["t_out"] < fix - 0.8]
                 tap = taps[-1] if taps else max(0.5, fix - 2.5)
-            headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round((cursor + tap) * fps)})
+            t0 = a
+            if steps:
+                span = (cursor + tap - a) / (len(steps) + 1)
+                for k_, txt in enumerate(steps):
+                    headlines.append({"text": txt, "fromFrame": round((a + k_ * span) * fps),
+                                      "toFrame": round((a + (k_ + 1) * span) * fps)})
+                t0 = a + len(steps) * span
+            headlines.append({"text": seg["before"], "fromFrame": round(t0 * fps), "toFrame": round((cursor + tap) * fps)})
             headlines.append({"text": seg["wait"], "fromFrame": round((cursor + tap) * fps), "toFrame": round(b * fps)})
         else:
             headlines.append({"text": seg["before"], "fromFrame": round(a * fps), "toFrame": round(b * fps)})
-        headlines.append({"text": seg["after"], "check": True, "fromFrame": round(b * fps), "toFrame": round(c * fps)})
+        if seg.get("outro") and c - b > 2.6:
+            # last beat before the end card: a question that earns comments
+            o = c - 1.6
+            headlines.append({"text": seg["after"], "check": True, "fromFrame": round(b * fps), "toFrame": round(o * fps)})
+            headlines.append({"text": seg["outro"], "fromFrame": round(o * fps), "toFrame": round(c * fps)})
+        else:
+            headlines.append({"text": seg["after"], "check": True, "fromFrame": round(b * fps), "toFrame": round(c * fps)})
         beat_times += [round(cursor + x["t_out"], 3) for x in beats]
         reveal = cursor + fix
         print(f"  [{i + 1}/{len(spec['segments'])}] {rec.name}: {analysis['source_duration']}s -> {dur:.2f}s, fix at {fix:.2f}s")
