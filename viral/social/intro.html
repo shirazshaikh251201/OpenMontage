@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:P;font-weight:600;src:url(playfair600.woff2)}
+@font-face{font-family:I;font-weight:500;src:url(inter500.woff2)}
+@font-face{font-family:I;font-weight:600;src:url(inter600.woff2)}
+:root{--cream:#F6F0EC;--ink:#0B0B10;--green:#21C165;--red:#A04641}
+*{margin:0;box-sizing:border-box}
+body{background:#ddd}
+.s{width:1080px;height:1350px;background:var(--cream);color:var(--ink);position:relative;overflow:hidden;font-family:I}
+.pad{position:absolute;inset:110px 96px}
+.icon{width:220px;height:220px;border-radius:50px;display:block}
+h1{font-family:P;font-weight:600;font-size:112px;line-height:1.02;letter-spacing:-.02em}
+h2{font-family:P;font-weight:600;font-size:88px;line-height:1.05;letter-spacing:-.02em}
+.sub{font-size:44px;line-height:1.3;color:#3a3a42;font-weight:500}
+.dots{position:absolute;bottom:64px;left:0;right:0;display:flex;justify-content:center;gap:14px}
+.dots i{width:14px;height:14px;border-radius:50%;background:#cfc6bf}.dots i.on{background:var(--ink)}
+.bubble{background:#fff;border-radius:34px;padding:30px 36px;font-size:40px;line-height:1.3;box-shadow:0 12px 40px rgba(11,11,16,.08)}
+.bad s{color:var(--red);text-decoration-thickness:4px}
+.good{background:#DFF5E7}
+.tick{display:inline-flex;width:58px;height:58px;border-radius:50%;background:var(--green);color:#fff;font-size:36px;font-weight:600;align-items:center;justify-content:center;margin-right:26px;flex:none}
+.row{display:flex;align-items:center;font-size:46px;font-weight:600;margin:0 0 40px}
+.row small{display:block;font-size:32px;font-weight:500;color:#5b5b63;margin-top:6px}
+.store{display:inline-block;border:3px solid var(--ink);border-radius:22px;padding:22px 36px;font-size:40px;font-weight:600;margin-right:20px}
+.pill{display:inline-block;background:var(--ink);color:var(--cream);border-radius:999px;padding:18px 34px;font-size:36px;font-weight:600}
+</style></head><body>
+
+<div class="s" id="s1"><div class="pad">
+ <img class="icon" src="app_icon_1024.png">
+ <h1 style="margin-top:70px">Hi, we're<br>Type Better.</h1>
+ <p class="sub" style="margin-top:36px">The keyboard that fixes your English — inside every app you already use.</p>
+ <div style="margin-top:80px">
+  <div class="bubble bad"><s>i didnt knew</s> you <s>was</s> coming today</div>
+  <div style="font-size:54px;text-align:center;margin:18px 0;color:var(--green)">↓</div>
+  <div class="bubble good">I didn't know you were coming today.</div>
+ </div>
+</div><div class="dots"><i class="on"></i><i></i><i></i></div></div>
+
+<div class="s" id="s2"><div class="pad">
+ <h2>One keyboard.<br>Every message, fixed.</h2>
+ <div style="margin-top:90px">
+  <div class="row"><span class="tick">✓</span><div>Fix grammar in one tap<small>Spelling, tense and punctuation, all at once</small></div></div>
+  <div class="row"><span class="tick">✓</span><div>Change the tone<small>22 tones — professional, polite, casual…</small></div></div>
+  <div class="row"><span class="tick">✓</span><div>Shorten what you wrote<small>Long message to one clean line</small></div></div>
+  <div class="row"><span class="tick">✓</span><div>Reply &amp; continue<small>Writes the reply or finishes your thought</small></div></div>
+  <div class="row"><span class="tick">✓</span><div>Just talk<small>Voice typing that cleans up the ums</small></div></div>
+ </div>
+</div><div class="dots"><i></i><i class="on"></i><i></i></div></div>
+
+<div class="s" id="s3"><div class="pad" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+ <img class="icon" src="app_icon_1024.png">
+ <h2 style="margin-top:70px">Start free.</h2>
+ <p class="sub" style="margin-top:28px;color:var(--green);font-weight:600;font-size:52px">2,000 AI words on us.</p>
+ <div style="margin-top:80px"><span class="store">App Store</span><span class="store">Google Play</span></div>
+ <div style="margin-top:80px"><span class="pill">Link in bio</span></div>
+</div><div class="dots"><i></i><i></i><i class="on"></i></div></div>
+</body></html>
