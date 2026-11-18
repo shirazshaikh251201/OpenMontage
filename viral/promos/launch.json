@@ -1,0 +1,47 @@
+{
+  "slug": "launch-meet-typebetter",
+  "name": "Launch post — Meet Type Better",
+  "crop": "crop=1170:2080:0:452",
+  "hook": "Meet Type Better.",
+  "hook_sub": "The keyboard that fixes your English.",
+  "hook_seconds": 2.4,
+  "bpm": 120,
+  "music_style": "punchy",
+  "zoom": 1.0,
+  "max_segment_seconds": 7.0,
+  "cta_seconds": 4.0,
+  "cta_line": "Start free — 2,000 AI words.",
+  "store_line": "on the App Store",
+  "cta_script": "Type Better. Free on the App Store, with two thousand AI words.",
+  "segments": [
+    {
+      "label": "Grammar",
+      "recording": "raw/v4/grammar-reveal.mov",
+      "cut": [
+        [
+          28.64,
+          28.79
+        ]
+      ],
+      "script": [
+        "Meet Type Better, the keyboard that fixes your English.",
+        "Type it wrong. One tap, and it's right."
+      ],
+      "max_seconds": 10.5
+    },
+    {
+      "label": "Tone",
+      "recording": "raw/v3/2 professional.mov",
+      "script": [
+        "Too blunt? Pick a tone, and it rewrites the message for you."
+      ]
+    },
+    {
+      "label": "Voice",
+      "recording": "raw/v3/5 voice.mov",
+      "script": [
+        "Or just talk. It cleans up what you said, and types it for you."
+      ]
+    }
+  ]
+}

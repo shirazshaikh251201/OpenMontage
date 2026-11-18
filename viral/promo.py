@@ -56,8 +56,10 @@ def run(promo_path: Path, out_dir: Path, scale: float) -> Path:
         needed = LEAD + sum(v["duration"] for v in vo) + GAP * (len(vo) - 1) + TAIL
         plan = beats_mod.fit_to_duration(beats_mod.plan_segments(rec), needed)
         # keep the pace: no section longer than the cap, unless its narration needs it
-        cap = max(needed, promo.get("max_segment_seconds", 99.0))
+        cap = max(needed, seg.get("max_seconds", promo.get("max_segment_seconds", 99.0)))
         plan = beats_mod.cap_duration(plan, cap)
+        for a_, b_ in seg.get("cut", []):
+            plan = beats_mod.retime(plan, a_, b_, None, "cut")   # drop glitch frames
         analysis = beats_mod.analyse(rec, plan)
         part = work / f"seg_{i}.mp4"
         dur = pl.normalise(rec, part, plan, promo.get("crop"), needed)
