@@ -83,5 +83,6 @@ the proxy. ElevenLabs' REST path works fine. Piper is the offline fallback.
 - Show the product being *used* — type a wrong sentence, tap, watch it get
   fixed. Not abstract feature montages. Rejected three videos before this
   landed.
-- iPhone only. No Google Play or Android reference in any frame.
+- The app is on both stores. Launch materials (18 Nov 2026) name the App Store
+  and Google Play together; earlier videos were iPhone-only by the user's request.
 - The offer is **2,000 AI words**, not 5,000.
