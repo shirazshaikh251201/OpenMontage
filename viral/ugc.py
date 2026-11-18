@@ -51,7 +51,7 @@ def run(presenter: Path, recording: Path, slug: str, out_dir: Path, intro_s: flo
     pl.sh(["ffmpeg", "-v", "error", "-i", str(presenter), "-vn", "-ac", "2", "-ar", "48000",
            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-y", str(voice)])
     # 2 ── captions from the presenter's real speech, one page-group per sentence
-    words = voice_mod.word_timings(voice)
+    words = voice_mod.fix_brand(voice_mod.word_timings(voice))
     # avatar renders run past the last word (Intone adds ~2.5s); end shortly
     # after the speech so the demo doesn't sit under silence
     body = min(duration(voice), (words[-1]["endMs"] / 1000 + 0.8) if words else duration(voice))

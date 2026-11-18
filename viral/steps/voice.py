@@ -281,6 +281,16 @@ def word_timings(audio: Path, offset_s: float = 0.0, model_size: str = "base.en"
     return captions
 
 
+def fix_brand(words: list[dict]) -> list[dict]:
+    """Whisper hears the app name as "Type, better" / "type better"; caption it right."""
+    for i in range(len(words) - 1):
+        a, b = words[i]["text"], words[i + 1]["text"]
+        if a.strip().rstrip(",").lower() == "type" and b.strip().lower().startswith("better"):
+            words[i]["text"] = a.replace(",", "").replace("type", "Type")
+            words[i + 1]["text"] = b.replace("better", "Better")
+    return words
+
+
 def captions_for(vo_segments: list[dict], offsets: list[float], workdir: Path) -> list[dict]:
     """Word timings across every narration line, shifted onto the final timeline."""
     all_caps: list[dict] = []

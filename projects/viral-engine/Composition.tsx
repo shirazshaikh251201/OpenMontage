@@ -322,7 +322,7 @@ const CaptionLayer: React.FC<{
           {page.tokens.map((t, i) => {
             const active = ms >= t.fromMs && ms < t.toMs;
             return (
-              <span key={i} style={{ whiteSpace: "pre", color: active ? ACCENT : inkText ? INK : "#FFFFFF" }}>
+              <span key={i} style={{ whiteSpace: "pre-wrap", color: active ? ACCENT : inkText ? INK : "#FFFFFF" }}>
                 {t.text}
               </span>
             );
