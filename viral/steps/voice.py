@@ -154,7 +154,10 @@ def speak_elevenlabs(text: str, out: Path, voice: str | None = None) -> float:
     cached = ELEVEN_CACHE / f"{stamp}.wav"
 
     if not cached.exists():
-        vid = _eleven_voice_id(key, voice)
+        # a 20-char ElevenLabs voice id can be used directly, skipping the
+        # voice-list lookup (which is slow and has timed out through the proxy)
+        import re as _re
+        vid = voice if _re.fullmatch(r"[A-Za-z0-9]{20}", voice or "") else _eleven_voice_id(key, voice)
         body = _json.dumps({
             "text": text,
             "model_id": model,
