@@ -1,0 +1,12 @@
+{
+  "slug": "chat-grammar-surprise",
+  "contact": "Priya",
+  "incoming": ["Surprise! I'm outside your house 🎉"],
+  "draft": "i didnt knew you was coming today",
+  "tool": "Fix grammar",
+  "fixed": "I didn't know you were coming today.",
+  "reply": "😂 come down!",
+  "hook": "Can you spot all 3 mistakes?",
+  "wait": "One tap…",
+  "after": "Fixed before you hit send."
+}

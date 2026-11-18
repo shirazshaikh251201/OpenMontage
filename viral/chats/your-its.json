@@ -1,0 +1,11 @@
+{
+  "slug": "chat-your-its",
+  "contact": "Aman",
+  "incoming": ["Wait, your texts have been so clean lately. What are you using?"],
+  "draft": "your going to love this, its the best app ive used all year",
+  "tool": "Fix grammar",
+  "fixed": "You're going to love this; it's the best app I've used all year.",
+  "reply": "Downloading it now",
+  "hook": "I type like this. On purpose.",
+  "after": "Fixed in one tap."
+}

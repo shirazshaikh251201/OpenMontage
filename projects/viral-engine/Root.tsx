@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { Scene, calculateMetadata, SceneProps } from "./Composition";
 import { SplitMeme, calculateSplitMetadata, SplitProps } from "./SplitMeme";
+import { ChatMock, calculateChatMetadata, ChatProps } from "./ChatMock";
 
 const fallback = {
   video: "", videoDurationInFrames: 300, captions: [], zooms: [], audio: null, fps: 30,
@@ -29,6 +30,16 @@ export const Root: React.FC = () => (
     height={1920}
     defaultProps={{} as unknown as SplitProps}
     calculateMetadata={calculateSplitMetadata}
+  />
+  <Composition
+    id="ChatMock"
+    component={ChatMock}
+    durationInFrames={600}
+    fps={30}
+    width={1080}
+    height={1920}
+    defaultProps={{} as unknown as ChatProps}
+    calculateMetadata={calculateChatMetadata}
   />
   </>
 );

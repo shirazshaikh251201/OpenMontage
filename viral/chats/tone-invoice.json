@@ -1,0 +1,12 @@
+{
+  "slug": "chat-tone-invoice",
+  "contact": "Client",
+  "incoming": ["Hey! Sorry, been swamped this week. Will look into it soon 🙏"],
+  "draft": "this is the third time im asking about the invoice. please pay",
+  "tool": "Professional",
+  "fixed": "This is my third request regarding the outstanding invoice. Kindly process the payment.",
+  "reply": "Apologies, processing it today.",
+  "hook": "You do NOT send this to a client.",
+  "wait": "Let it rewrite you first…",
+  "after": "Sounds professional in one tap."
+}
