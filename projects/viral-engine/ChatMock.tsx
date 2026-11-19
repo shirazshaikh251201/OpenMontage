@@ -34,7 +34,17 @@ export interface ChatMessage {
   frame: number;
 }
 
+export interface SpokenWord {
+  text: string;
+  frame: number;
+}
+
 export interface ChatProps {
+  /** "voice": the scene opens on Type Better's dictation panel already listening */
+  mode?: "type" | "voice";
+  spokenWords?: SpokenWord[];
+  /** frame the fix lands with a jolt (crash zoom + shake + flash) on the phone */
+  jolt?: boolean;
   contact: string;
   tool: string;
   messages: ChatMessage[];
@@ -154,7 +164,9 @@ const InputField: React.FC<{ p: ChatProps }> = ({ p }) => {
   const caret = Math.floor(frame / 15) % 2 === 0;
   let content: React.ReactNode = null;
 
-  if (frame < p.typeStart || frame >= p.sendFrame) {
+  if (p.mode === "voice" && frame < p.fixFrame) {
+    content = null;
+  } else if (frame < p.typeStart || frame >= p.sendFrame) {
     content = null;
   } else if (frame < p.typeEnd) {
     const n = Math.floor(interpolate(frame, [p.typeStart, p.typeEnd], [0, p.draft.length], { extrapolateRight: "clamp" }));
@@ -206,7 +218,11 @@ const InputField: React.FC<{ p: ChatProps }> = ({ p }) => {
           boxShadow: working ? `0 0 0 4px rgba(33,193,101,${shimmer})` : "none",
         }}
       >
-        {empty ? <span style={{ color: "#a3a3aa" }}>Message</span> : content}
+        {empty ? (
+          <span style={{ color: "#a3a3aa" }}>{p.mode === "voice" && frame < p.fixFrame ? "Listening…" : "Message"}</span>
+        ) : (
+          content
+        )}
         {!working && frame < p.sendFrame && frame >= p.typeStart ? (
           <span style={{ display: "inline-block", width: 4, height: 44, background: ACCENT, marginLeft: 2, verticalAlign: "-8px", opacity: caret ? 1 : 0 }} />
         ) : null}
@@ -330,12 +346,63 @@ const Keyboard: React.FC<{ p: ChatProps }> = ({ p }) => {
   );
 };
 
+/* ---------------------------- dictation panel ---------------------------- */
+
+// Shown instead of the keyboard while Type Better listens: what is being said
+// appears word by word, then "Cleaning up…" before the clean text is inserted.
+const DictationPanel: React.FC<{ p: ChatProps }> = ({ p }) => {
+  const frame = useCurrentFrame();
+  const words = (p.spokenWords ?? []).filter((w) => frame >= w.frame);
+  const last = (p.spokenWords ?? []).slice(-1)[0];
+  const speaking = words.length > 0 && last && frame < last.frame + 12;
+  const cleaning = frame >= p.tapFrame;
+  const bars = Array.from({ length: 38 }, (_, i) => {
+    const amp = speaking ? 0.35 + 0.65 * Math.abs(Math.sin(frame / 3.1 + i * 0.9) * Math.cos(frame / 5.3 + i * 0.37)) : 0.08;
+    return Math.max(6, amp * 110);
+  });
+  return (
+    <div style={{ height: KEYBOARD_H, background: "#F2F2F4", padding: "22px 30px", fontFamily: SANS, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+        <span style={{ background: "#fff", borderRadius: 999, padding: "10px 26px", fontWeight: 600, fontSize: 28, color: INK }}>Dictate</span>
+        <span style={{ fontWeight: 500, fontSize: 28, color: "#9a9aa2" }}>Translate</span>
+        <span style={{ marginLeft: "auto", fontWeight: 500, fontSize: 26, color: "#6b6b73" }}>✦ Type Better</span>
+      </div>
+      <div style={{ textAlign: "center", marginTop: 22, fontWeight: 600, fontSize: 30, color: cleaning ? INK : RED }}>
+        {cleaning ? "✦ Cleaning up…" : "● Listening"}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, height: 130, marginTop: 10, opacity: cleaning ? 0.25 : 1 }}>
+        {bars.map((h, i) => (
+          <div key={i} style={{ width: 9, height: h, borderRadius: 6, background: INK }} />
+        ))}
+      </div>
+      <div
+        style={{
+          flex: 1,
+          marginTop: 8,
+          fontSize: 46,
+          lineHeight: 1.25,
+          fontWeight: 600,
+          color: INK,
+          textAlign: "center",
+          opacity: cleaning ? 0.35 : 1,
+        }}
+      >
+        {words.map((w) => w.text).join("")}
+      </div>
+    </div>
+  );
+};
+
 /* ---------------------------------- scene --------------------------------- */
 
 export const ChatMock: React.FC<ChatProps> = (p) => {
   const frame = useCurrentFrame();
   const shown = p.messages.filter((m) => frame >= m.frame);
   const pop = interpolate(frame, [0, 8], [0.96, 1], { extrapolateRight: "clamp" });
+  const d = frame - p.fixFrame;
+  const jz = !p.jolt || d < 0 ? 1 : d < 3 ? interpolate(d, [0, 3], [1, 1.07]) : d < 18 ? interpolate(d, [3, 18], [1.07, 1]) : 1;
+  const sh = p.jolt && d >= 0 && d < 12 ? (12 - d) / 12 : 0;
+  const flash = p.jolt && d >= 0 && d < 4 ? interpolate(d, [0, 4], [0.7, 0]) : 0;
   return (
     <AbsoluteFill style={{ background: CREAM }}>
       <FontFaces />
@@ -356,7 +423,7 @@ export const ChatMock: React.FC<ChatProps> = (p) => {
               boxShadow: "0 30px 80px rgba(11,11,16,0.22)",
               display: "flex",
               flexDirection: "column",
-              transform: `scale(${pop})`,
+              transform: `translate(${sh * 16 * Math.sin(d * 2.9)}px, ${sh * 10 * Math.cos(d * 3.4)}px) scale(${pop * jz})`,
             }}
           >
             {/* header */}
@@ -405,12 +472,19 @@ export const ChatMock: React.FC<ChatProps> = (p) => {
 
             <div style={{ flex: "none" }}>
               <InputField p={p} />
-              <Toolbar p={p} />
-              <Keyboard p={p} />
+              {p.mode === "voice" && frame < p.fixFrame ? (
+                <DictationPanel p={p} />
+              ) : (
+                <>
+                  <Toolbar p={p} />
+                  <Keyboard p={p} />
+                </>
+              )}
             </div>
           </div>
 
           <Headline headlines={p.headlines} fps={p.fps} />
+          <AbsoluteFill style={{ background: "#fff", opacity: flash, pointerEvents: "none" }} />
         </AbsoluteFill>
       </Sequence>
 

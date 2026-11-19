@@ -1,0 +1,17 @@
+{
+  "slug": "chat-villain-voice-note",
+  "mode": "voice",
+  "contact": "The Hero",
+  "incoming": [
+    "Who is this??"
+  ],
+  "voice_id": "pNInz6obpgDQGcFmaJgB",
+  "voice_text": "Um, so like... your days are, uh... numbered. Anyway... see you Friday?",
+  "fixed": "Your days are numbered. See you Friday?",
+  "fixed_is_placeholder": true,
+  "reply": "...ok that's actually terrifying",
+  "hook": "VILLAIN VOICE NOTE 😈",
+  "after": "Terrifying. Professionally.",
+  "outro": "Your boss texts are next 👀",
+  "voice_speed": 1.15
+}
