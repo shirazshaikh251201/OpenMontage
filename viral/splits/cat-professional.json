@@ -1,0 +1,32 @@
+{
+  "slug": "split-cat-professional",
+  "reaction": "raw/reaction/cat-surprised.mp4",
+  "reaction_y": 0.5,
+  "surprise_at": 5.0,
+  "real_time": true,
+  "music_style": "suspense",
+  "segments": [
+    {
+      "recording": "raw/v3/2 professional.mov",
+      "before": "You're about to send this to a client 😬",
+      "wait": "Wait… 👀",
+      "after": "Professional in one tap.",
+      "outro": "Would you have sent the first one? 👇",
+      "real_ranges": [
+        [
+          0.0,
+          2.5,
+          0.7
+        ],
+        [
+          2.8,
+          9.7,
+          2.6
+        ]
+      ],
+      "tap_at": 2.9,
+      "fix_at": 10.0
+    }
+  ],
+  "cta_seconds": 2.5
+}

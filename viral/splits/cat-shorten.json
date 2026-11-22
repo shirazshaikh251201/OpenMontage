@@ -1,0 +1,32 @@
+{
+  "slug": "split-cat-shorten",
+  "reaction": "raw/reaction/cat-surprised.mp4",
+  "reaction_y": 0.5,
+  "surprise_at": 5.0,
+  "real_time": true,
+  "music_style": "suspense",
+  "segments": [
+    {
+      "recording": "raw/v3/3 shorten.mov",
+      "before": "This is ONE text message 😵",
+      "wait": "Watch it shrink…",
+      "after": "5 lines ➜ 1 line.",
+      "outro": "Tag the friend who texts like this 👇",
+      "real_ranges": [
+        [
+          0.0,
+          2.8,
+          0.9
+        ],
+        [
+          2.8,
+          15.9,
+          4.3
+        ]
+      ],
+      "tap_at": 3.0,
+      "fix_at": 16.3
+    }
+  ],
+  "cta_seconds": 2.5
+}
