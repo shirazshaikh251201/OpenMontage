@@ -1,0 +1,16 @@
+{
+  "slug": "chat-continue-proposal",
+  "cold_open": true,
+  "prefill": 20,
+  "contact": "Aman",
+  "incoming": ["Hi, has the proposal for the website redesign? Would love your thought."],
+  "draft": "Thanks for sending the proposal. I had a look and",
+  "tool": "Continue",
+  "fixed": "Thanks for sending the proposal. I had a look and everything looks very promising. I just have a couple of quick questions before we take the next step. Let me know when you might have a few minutes to talk.",
+  "reply": "Sure, free at 4?",
+  "hook": "Typed half a sentence… 🤔",
+  "wait": "It finished my thought 🤯",
+  "after": "Started it. It finished it.",
+  "pause": 0.5,
+  "hold_fixed": 2.4
+}

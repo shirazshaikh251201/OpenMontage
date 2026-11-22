@@ -1,0 +1,14 @@
+{
+  "slug": "chat-voice-running-late",
+  "mode": "voice",
+  "contact": "Priya",
+  "incoming": ["Where are you?? Everyone's here 😤"],
+  "voice_id": "x9wViLHrpGxKBhkUybpR",
+  "voice_text": "Um, so like... tell Rahul I'll be, uh... ten minutes late. Sorry.",
+  "voice_speed": 1.1,
+  "fixed": "Tell Rahul I'll be 10 minutes late. Sorry.",
+  "reply": "ok, ordering for you 🙄",
+  "hook": "POV: running late, can't type 🏃",
+  "after": "Talked messy. Sent clean.",
+  "outro": "Would you rather type or talk? 👇"
+}

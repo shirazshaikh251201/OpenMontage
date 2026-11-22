@@ -1,0 +1,16 @@
+{
+  "slug": "chat-shorten-wall",
+  "cold_open": true,
+  "prefill": 120,
+  "type_speed": 26,
+  "contact": "Aman",
+  "incoming": ["Hey, how's your week going?"],
+  "draft": "i just wanted to quickly reach out and check in to see whether or not you might possibly have had a chance to look at the document i sent over last week",
+  "tool": "Shorten",
+  "fixed": "Have you had a chance to review the document I sent last week?",
+  "reply": "Yes! Sending feedback today 👍",
+  "hook": "This is ONE text message 😵",
+  "wait": "Watch it shrink…",
+  "after": "5 lines ➜ 1 line.",
+  "pause": 0.5
+}

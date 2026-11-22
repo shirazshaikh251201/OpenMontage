@@ -1,0 +1,16 @@
+{
+  "slug": "chat-polite-invoice",
+  "cold_open": true,
+  "prefill": 25,
+  "contact": "Client",
+  "incoming": ["Hey! Sorry, been swamped this week. Will look into it soon 🙏"],
+  "draft": "this is the third time im asking about the invoice. please pay",
+  "tool": "Polite",
+  "fixed": "I am writing to kindly follow up on the invoice for the third time; I would truly appreciate your help in processing this payment.",
+  "reply": "So sorry! Paying it right now.",
+  "hook": "3rd reminder. Still polite. 😇",
+  "wait": "One tap…",
+  "after": "Got paid. Kept the client.",
+  "pause": 0.6,
+  "hold_fixed": 2.2
+}

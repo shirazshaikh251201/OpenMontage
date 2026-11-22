@@ -1,0 +1,15 @@
+{
+  "slug": "chat-paraphrase-delivery",
+  "cold_open": true,
+  "prefill": 18,
+  "contact": "Pizza Corner",
+  "incoming": ["Your order is out for delivery! 🛵 Arriving in 15 mins."],
+  "draft": "am waiting since one hour, your delivery boy still not came",
+  "tool": "Paraphrase",
+  "fixed": "I have been waiting for an hour, but your delivery person has not arrived yet.",
+  "reply": "So sorry! He's 2 minutes away 🙏",
+  "hook": "Angry text ➜ classy text",
+  "wait": "One tap…",
+  "after": "Still angry. Now classy. 😌",
+  "pause": 0.6
+}

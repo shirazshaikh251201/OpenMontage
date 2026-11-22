@@ -66,13 +66,21 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
         return run_voice(spec, slug, work, pub, out_dir, scale)
 
     # timeline, in seconds
-    t = 0.6
     messages = []
-    for m in spec.get("incoming", []):
-        messages.append({"from": "them", "text": m, "frame": f(t)})
-        t += 0.9
-    type_start = t + 0.3
-    type_end = type_start + len(spec["draft"]) / CHARS_PER_SEC
+    cps = spec.get("type_speed", CHARS_PER_SEC)
+    if spec.get("cold_open"):
+        # open mid-action: the chat is already there and typing is under way
+        # (prefill = characters already typed on frame 1), never an idle screen
+        for m in spec.get("incoming", []):
+            messages.append({"from": "them", "text": m, "frame": 0})
+        type_start = 0.1 - spec.get("prefill", 0) / cps
+    else:
+        t = 0.6
+        for m in spec.get("incoming", []):
+            messages.append({"from": "them", "text": m, "frame": f(t)})
+            t += 0.9
+        type_start = t + 0.3
+    type_end = type_start + len(spec["draft"]) / cps
     tap = type_end + spec.get("pause", 0.9)          # beat to let viewers spot the mistakes
     fix = tap + spec.get("working_seconds", 0.6)     # the app is fast; keep the wait short
     send = fix + spec.get("hold_fixed", 1.6)         # read the corrected text in the field
@@ -95,7 +103,7 @@ def run(spec_path: Path, out_dir: Path, scale: float) -> Path:
     total = body + cta_s
     track = pub / f"{slug}_audio.mp3"
     sound_mod.design(track, total, [round(tap, 3), round(fix, 3), round(send, 3)],
-                     typing_runs=[(type_start, type_end)], bpm=spec.get("bpm", 118),
+                     typing_runs=[(max(0.0, type_start), type_end)], bpm=spec.get("bpm", 118),
                      style=spec.get("music_style", "calm"), music_gain=0.45)
 
     props = {

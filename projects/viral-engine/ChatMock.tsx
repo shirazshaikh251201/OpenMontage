@@ -80,7 +80,8 @@ const Headline: React.FC<{ headlines: ChatProps["headlines"]; fps: number }> = (
   const frame = useCurrentFrame();
   const h = headlines.find((x) => frame >= x.fromFrame && frame < x.toFrame);
   if (!h) return null;
-  const s = spring({ frame: frame - h.fromFrame, fps, config: { damping: 200, mass: 0.5, stiffness: 240 } });
+  // the opening headline is fully on screen from frame 1: no fade-in on the hook
+  const s = h.fromFrame === 0 ? 1 : spring({ frame: frame - h.fromFrame, fps, config: { damping: 200, mass: 0.5, stiffness: 240 } });
   return (
     <div
       style={{
@@ -127,7 +128,8 @@ const Headline: React.FC<{ headlines: ChatProps["headlines"]; fps: number }> = (
 
 const Bubble: React.FC<{ m: ChatMessage; fps: number }> = ({ m, fps }) => {
   const frame = useCurrentFrame();
-  const s = spring({ frame: frame - m.frame, fps, config: { damping: 16, mass: 0.6, stiffness: 200 } });
+  // messages already in the chat at the cold open don't animate in
+  const s = m.frame === 0 ? 1 : spring({ frame: frame - m.frame, fps, config: { damping: 16, mass: 0.6, stiffness: 200 } });
   const me = m.from === "me";
   return (
     <div style={{ display: "flex", justifyContent: me ? "flex-end" : "flex-start", margin: "10px 26px" }}>
@@ -398,7 +400,7 @@ const DictationPanel: React.FC<{ p: ChatProps }> = ({ p }) => {
 export const ChatMock: React.FC<ChatProps> = (p) => {
   const frame = useCurrentFrame();
   const shown = p.messages.filter((m) => frame >= m.frame);
-  const pop = interpolate(frame, [0, 8], [0.96, 1], { extrapolateRight: "clamp" });
+  const pop = 1;
   const d = frame - p.fixFrame;
   const jz = !p.jolt || d < 0 ? 1 : d < 3 ? interpolate(d, [0, 3], [1, 1.07]) : d < 18 ? interpolate(d, [3, 18], [1.07, 1]) : 1;
   const sh = p.jolt && d >= 0 && d < 12 ? (12 - d) / 12 : 0;
