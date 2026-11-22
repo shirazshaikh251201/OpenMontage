@@ -1,0 +1,14 @@
+{
+  "slug": "chat-hookb-typing-not-english",
+  "cold_open": true, "prefill": 10,
+  "contact": "Priya",
+  "incoming": ["Surprise! I'm outside your house 🎉"],
+  "draft": "i didnt knew you was coming today",
+  "tool": "Fix grammar",
+  "fixed": "I didn't know you were coming today.",
+  "reply": "😂 come down!",
+  "hook": "Your English isn't bad. Your typing is.",
+  "wait": "One tap…",
+  "after": "Fixed before you hit send.",
+  "pause": 0.7
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "chat-voice-hookb-stop-voice-notes",
+  "mode": "voice",
+  "contact": "Priya",
+  "incoming": ["Where are you?? Everyone's here 😤"],
+  "voice_id": "x9wViLHrpGxKBhkUybpR",
+  "voice_text": "Um, so like... tell Rahul I'll be, uh... ten minutes late. Sorry.",
+  "voice_speed": 1.1,
+  "fixed": "Tell Rahul I'll be 10 minutes late. Sorry.",
+  "reply": "ok, thanks for texting not a voice note 🙏",
+  "hook": "Stop sending voice notes. Do this. 🎙️",
+  "after": "Speak it. It texts it.",
+  "outro": "Voice notes or text? 👇"
+}

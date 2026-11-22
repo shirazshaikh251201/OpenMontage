@@ -1,0 +1,14 @@
+{
+  "slug": "chat-hookb-recommend-typos",
+  "cold_open": true, "prefill": 16,
+  "contact": "Aman",
+  "incoming": ["Wait, your texts have been so clean lately. What are you using?"],
+  "draft": "your going to love this, its the best app ive used all year",
+  "tool": "Fix grammar",
+  "fixed": "You're going to love this; it's the best app I've used all year.",
+  "reply": "Downloading it now",
+  "hook": "Recommending a grammar app… with 3 typos",
+  "wait": "Hold on…",
+  "after": "Okay. Now it's convincing.",
+  "pause": 0.7
+}

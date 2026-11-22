@@ -1,0 +1,17 @@
+{
+  "slug": "chat-reply-lazy",
+  "cold_open": true,
+  "contact": "Priya",
+  "incoming": [
+    "Hey, are we still on for Friday?"
+  ],
+  "draft": "",
+  "tool": "Reply",
+  "fixed": "Yes, absolutely! Still good for Friday.",
+  "reply": "Yay! See you then 🎉",
+  "hook": "Friend texts. You're too lazy to reply 😴",
+  "wait": "It writes it for you…",
+  "after": "Reply sent. Zero effort.",
+  "pause": 2.2,
+  "working_seconds": 0.8
+}

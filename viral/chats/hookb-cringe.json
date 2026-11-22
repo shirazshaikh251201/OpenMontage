@@ -1,0 +1,15 @@
+{
+  "slug": "chat-hookb-cringe",
+  "cold_open": true, "prefill": 14,
+  "contact": "Priya",
+  "incoming": ["Where are Rahul and Sneha? Weren't they meant to be here by 10?"],
+  "draft": "Their going to there office because they forget there laptop",
+  "tool": "Fix grammar",
+  "fixed": "They are going to their office because they forgot their laptop.",
+  "reply": "Ahh ok, thanks!",
+  "hook": "Read this without cringing 😬",
+  "wait": "Fixing…",
+  "after": "4 mistakes. 1 tap.",
+  "outro": "Did you spot all 4? 👇",
+  "pause": 0.9
+}

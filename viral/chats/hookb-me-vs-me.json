@@ -1,0 +1,16 @@
+{
+  "slug": "chat-hookb-me-vs-me",
+  "cold_open": true, "prefill": 30,
+  "contact": "Client",
+  "incoming": ["Hey! Sorry, been swamped this week. Will look into it soon 🙏"],
+  "draft": "this is the third time im asking about the invoice. please pay",
+  "tool": "Professional",
+  "fixed": "This serves as my third follow-up concerning the invoice. Please process the payment.",
+  "reply": "Apologies, processing it today.",
+  "hook": "Me vs. me after one tap",
+  "wait": "One tap…",
+  "after": "Angry ➜ professional.",
+  "outro": "Which one do you usually send? 👇",
+  "pause": 0.6,
+  "hold_fixed": 2.0
+}
